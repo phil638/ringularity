@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ringularity &ndash; Our Services</title>
+<meta name="description" content="Ringularity &mdash; strategy consulting, supply chain transformation, and a digital platform that builds lasting organisational capability and resilience.">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ─────────────────────────────────────────────────────── */
+:root{
+  --ink:#101812;
+  --gold:#b8924a;
+  --gold-lt:#d4ac6e;
+  --cream:#f5f2ec;
+  --cream-dim:#d8d4cc;
+  --muted:rgba(245,242,236,0.75);
+  --rule:rgba(184,146,74,0.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+/* ── BACKGROUND ────────────────────────────────────────────────────── */
+body{
+  font-family:'Jost',sans-serif;
+  color:var(--cream);
+  min-height:100vh;
+  background:var(--ink);
+  position:relative;
+  overflow-x:hidden;
+  line-height:1.65;
+  font-weight:300;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:-2;
+  background:url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;
+  background:linear-gradient(175deg,rgba(16,24,18,0.92) 0%,rgba(16,24,18,0.88) 50%,rgba(16,24,18,0.94) 100%);
+}
+/* grain */
+.grain{
+  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.04;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat:repeat;background-size:256px 256px;
+}
+
+/* ── NAV ───────────────────────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 36px;
+  background:rgba(16,24,18,0.65);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--rule);
+  transition:background 0.3s;
+}
+nav.scrolled{background:rgba(16,24,18,0.92);}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: var(--cream);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav-logo-wrap {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+.nav-logo-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 6px;
+  border: 2px solid var(--rule);
+  animation: nav-spin 30s linear infinite;
+}
+.nav-logo-ring::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: nav-dot-spin 15s linear infinite;
+}
+.nav-logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  object-fit: contain;
+  display: block;
+  background: transparent;
+}
+@keyframes nav-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes nav-dot-spin {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to   { transform: translateX(-50%) rotate(-360deg); }
+}
+.nav-links{display:flex;gap:28px;align-items:center;list-style:none;}
+.nav-links a{
+  font-family:'Jost',sans-serif;font-size:0.85rem;font-weight:400;
+  color:var(--cream-dim);text-decoration:none;letter-spacing:0.04em;
+  text-transform:uppercase;transition:color 0.2s;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--gold);}
+@media(max-width:640px){
+  nav{padding:14px 20px;}
+  .nav-links{gap:16px;}
+  .nav-links a{font-size:0.75rem;}
+}
+
+/* ── HERO ──────────────────────────────────────────────────────────── */
+.hero{
+  min-height:60vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:140px 24px 80px;position:relative;z-index:1;
+}
+.hero-label{
+  font-family:'Jost',sans-serif;font-size:0.85rem;font-weight:500;
+  letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);
+  margin-bottom:20px;
+  opacity:0;animation:fadeUp 0.8s 0.2s forwards;
+}
+.hero h1{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.6rem,5.5vw,4.4rem);font-weight:700;
+  line-height:1.15;max-width:780px;color:#ffffff;
+  opacity:0;animation:fadeUp 0.8s 0.4s forwards;
+}
+.hero h1 em{font-style:italic;color:var(--gold-lt);}
+.hero-sub{
+  font-size:1.1rem;color:rgba(245,242,236,0.82);max-width:560px;
+  margin-top:22px;line-height:1.7;
+  opacity:0;animation:fadeUp 0.8s 0.6s forwards;
+}
+.hero-rule{
+  width:48px;height:2px;background:var(--gold);margin:36px auto 0;
+  opacity:0;animation:fadeUp 0.8s 0.8s forwards;
+}
+
+/* ── SECTIONS ──────────────────────────────────────────────────────── */
+.section{
+  position:relative;z-index:1;
+  max-width:1060px;margin:0 auto;
+  padding:80px 28px;
+}
+.section + .section{border-top:1px solid var(--rule);}
+
+.section-label{
+  font-family:'Jost',sans-serif;font-size:0.8rem;font-weight:500;
+  letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-lt);
+  margin-bottom:14px;
+}
+.section h2{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2rem,3.5vw,2.8rem);font-weight:700;
+  line-height:1.2;margin-bottom:20px;color:#ffffff;
+}
+.section p{
+  font-size:1.05rem;color:rgba(245,242,236,0.82);
+  max-width:640px;line-height:1.75;
+}
+.section p + p{margin-top:16px;}
+
+/* ── PILLAR CARDS ──────────────────────────────────────────────────── */
+.pillars{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:24px;margin-top:48px;
+}
+.pillar{
+  background:rgba(245,242,236,0.05);
+  border:1px solid var(--rule);
+  border-radius:6px;padding:32px 28px 28px;
+  transition:border-color 0.25s,transform 0.25s,box-shadow 0.25s;
+}
+.pillar:hover{
+  border-color:var(--gold);
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(184,146,74,0.08);
+}
+.pillar-icon{
+  font-size:1.8rem;margin-bottom:16px;
+  width:48px;height:48px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(184,146,74,0.15);border-radius:50%;
+  color:var(--gold-lt);
+}
+.pillar h3{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.35rem;font-weight:700;margin-bottom:10px;
+  color:#ffffff;
+}
+.pillar p{
+  font-size:0.95rem;color:rgba(245,242,236,0.75);
+  line-height:1.7;max-width:none;
+}
+
+/* ── APPROACH TIMELINE ─────────────────────────────────────────────── */
+.approach-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0;margin-top:48px;
+  border:1px solid var(--rule);border-radius:6px;overflow:hidden;
+}
+@media(max-width:680px){.approach-grid{grid-template-columns:1fr;}}
+.approach-item{
+  padding:32px 28px;
+  border-bottom:1px solid var(--rule);
+  border-right:1px solid var(--rule);
+  transition:background 0.25s;
+}
+.approach-item:hover{background:rgba(184,146,74,0.04);}
+@media(min-width:681px){
+  .approach-item:nth-child(2n){border-right:none;}
+  .approach-item:nth-last-child(-n+2){border-bottom:none;}
+}
+@media(max-width:680px){
+  .approach-item{border-right:none;}
+  .approach-item:last-child{border-bottom:none;}
+}
+.approach-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:2.2rem;font-weight:700;color:var(--gold-lt);
+  line-height:1;margin-bottom:10px;
+}
+.approach-item h3{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.2rem;font-weight:600;margin-bottom:8px;
+  color:#ffffff;
+}
+.approach-item p{
+  font-size:0.95rem;color:rgba(245,242,236,0.72);
+  line-height:1.7;max-width:none;
+}
+
+/* ── VALUES STRIP ──────────────────────────────────────────────────── */
+.values{
+  display:flex;flex-wrap:wrap;gap:12px;margin-top:40px;
+}
+.value-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:40px;
+  border:1px solid var(--rule);
+  font-size:0.9rem;font-weight:400;color:rgba(245,242,236,0.82);
+  transition:border-color 0.2s,color 0.2s;
+}
+.value-chip:hover{border-color:var(--gold);color:#ffffff;}
+.value-chip::before{
+  content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--gold);flex-shrink:0;
+}
+
+/* ── CTA ───────────────────────────────────────────────────────────── */
+.cta-section{
+  text-align:center;padding:80px 28px 100px;
+  position:relative;z-index:1;
+}
+.cta-section h2{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2rem,3.5vw,2.8rem);font-weight:700;
+  margin-bottom:16px;color:#ffffff;
+}
+.cta-section p{
+  font-size:1.05rem;color:rgba(245,242,236,0.82);
+  max-width:480px;margin:0 auto 32px;line-height:1.7;
+}
+.btn-gold{
+  display:inline-block;padding:14px 36px;
+  background:var(--gold);color:var(--ink);
+  font-family:'Jost',sans-serif;font-size:0.9rem;font-weight:600;
+  text-decoration:none;border-radius:4px;
+  letter-spacing:0.04em;
+  transition:background 0.2s,transform 0.15s;
+}
+.btn-gold:hover{background:var(--gold-lt);transform:translateY(-1px);}
+
+/* ── FOOTER ────────────────────────────────────────────────────────── */
+footer{
+  position:relative;z-index:1;
+  border-top:1px solid var(--rule);
+  padding:28px 36px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+  font-size:0.78rem;color:rgba(245,242,236,0.35);
+}
+footer a{color:var(--gold);text-decoration:none;opacity:0.7;transition:opacity 0.2s;}
+footer a:hover{opacity:1;}
+
+/* ── ANIMATIONS ────────────────────────────────────────────────────── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(18px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity 0.7s ease,transform 0.7s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-wrap">
+      <div class="nav-logo-ring"></div>
+      <img class="nav-logo-img" src="Tree_professional.jpg" alt="Ringularity">
+    </div>
+    RINGULARITY
+  </a>
+  <div class="nav-links">
+    <a href="/about">About</a>
+    <a href="/our-services" class="active">Services</a>
+    <a href="/about#systems">Five Systems</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-label">Our Services</div>
+  <h1>Strategy, People <em>&amp;&nbsp;Platform</em></h1>
+  <p class="hero-sub">We combine experienced consulting with a digital platform purpose-built to help organisations grow &mdash; systematically, measurably, and on their own terms.</p>
+  <div class="hero-rule"></div>
+</section>
+
+<!-- WHAT WE DO -->
+<section class="section reveal">
+  <div class="section-label">What We Offer</div>
+  <h2>Three interlocking capabilities</h2>
+  <p>Most consultancies leave behind a report. We leave behind a more capable organisation. Our services are designed to work together &mdash; but each stands on its own.</p>
+
+  <div class="pillars">
+    <div class="pillar">
+      <span class="pillar-icon">&#9670;</span>
+      <h3>Digital Growth Platform</h3>
+      <p>Our proprietary assessment and resource platform gives leadership teams a clear, evidence-based view of where their organisation stands today and precisely what it takes to reach the next stage of maturity. It turns strategy into structured, trackable growth steps &mdash; not just aspirations on a slide.</p>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">&#9733;</span>
+      <h3>Strategy &amp; Supply Chain Consulting</h3>
+      <p>Our consultants bring decades of hands-on experience across strategy, operations, and end-to-end supply chain transformation. We work shoulder-to-shoulder with your teams &mdash; diagnosing root causes, designing pragmatic solutions, and staying long enough to see real results take hold.</p>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">&#10047;</span>
+      <h3>Capability Building &amp; Workshops</h3>
+      <p>Sustainable change happens when people grow, not just processes. We design and deliver immersive learning experiences &mdash; from executive alignment sessions to hands-on simulation exercises &mdash; that embed the mindsets, skills, and disciplines needed for lasting improvement.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW WE WORK -->
+<section class="section reveal">
+  <div class="section-label">How We Work</div>
+  <h2>Partnership, not prescription</h2>
+  <p>We do not believe in fly-in consultants or off-the-shelf frameworks. Every engagement starts with listening, and every solution is built with the people who will own it long after we step back.</p>
+
+  <div class="approach-grid">
+    <div class="approach-item">
+      <div class="approach-num">01</div>
+      <h3>Diagnose with rigour</h3>
+      <p>We use our Growth State Assessment to establish a clear baseline across five interconnected organisational systems &mdash; giving you an honest, data-backed picture rather than assumption-driven narratives.</p>
+    </div>
+    <div class="approach-item">
+      <div class="approach-num">02</div>
+      <h3>Co-design with your teams</h3>
+      <p>Solutions designed without the people who execute them rarely stick. We facilitate collaborative design sessions that draw on internal knowledge and build ownership from day one.</p>
+    </div>
+    <div class="approach-item">
+      <div class="approach-num">03</div>
+      <h3>Build capability, not dependency</h3>
+      <p>Our goal is to make ourselves unnecessary. We transfer tools, frameworks, and confidence so your organisation can sustain and extend improvements independently.</p>
+    </div>
+    <div class="approach-item">
+      <div class="approach-num">04</div>
+      <h3>Stay for the long term</h3>
+      <p>Real transformation is measured in quarters and years, not weeks. We partner with clients over sustained engagements, adapting as the organisation evolves and new challenges emerge.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT WE BELIEVE -->
+<section class="section reveal">
+  <div class="section-label">What We Believe</div>
+  <h2>Principles that shape everything we do</h2>
+  <p>These are not corporate values on a poster. They are commitments that guide how we show up, what we prioritise, and the kind of work we are willing to put our name to.</p>
+
+  <div class="values">
+    <span class="value-chip">People-centric transformation</span>
+    <span class="value-chip">Resilience over optimisation</span>
+    <span class="value-chip">Capability that compounds</span>
+    <span class="value-chip">Honesty in diagnosis</span>
+    <span class="value-chip">Long-term partnerships</span>
+    <span class="value-chip">Practical over theoretical</span>
+    <span class="value-chip">Systems thinking</span>
+    <span class="value-chip">Measurable progress</span>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section reveal">
+  <h2>Ready to grow?</h2>
+  <p>Whether you are beginning a transformation journey or looking to accelerate one already underway, we would welcome the conversation.</p>
+  <a href="/about#contact" class="btn-gold">Get in Touch</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>&copy; 2026 Ringularity. All rights reserved.</span>
+  <span>
+    <a href="/about">About</a> &nbsp;&middot;&nbsp;
+    <a href="/our-services">Services</a> &nbsp;&middot;&nbsp;
+    <a href="/about#systems">Five Systems</a>
+  </span>
+</footer>
+
+<script>
+/* Scroll-driven nav background */
+var nav = document.getElementById('mainNav');
+window.addEventListener('scroll', function() {
+  if (window.scrollY > 60) nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+});
+
+/* Intersection observer for reveal animations */
+var reveals = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window) {
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  reveals.forEach(function(el) { obs.observe(el); });
+} else {
+  reveals.forEach(function(el) { el.classList.add('visible'); });
+}
+</script>
+</body>
+</html>

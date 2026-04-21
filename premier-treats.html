@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premier Treats — Supply Chain Planning Simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --brand-red: #C41E3A;
+  --brand-red-dark: #8B1428;
+  --brand-gold: #D4A843;
+  --brand-cream: #FFF8E7;
+  --brand-brown: #5C3D2E;
+  --surface: #FFFDF5;
+  --surface-alt: #FEF7E6;
+  --surface-card: #FFFFFF;
+  --text: #2D1B0E;
+  --text-muted: #8B7355;
+  --border: #E8D5B8;
+  --border-light: #F0E6D2;
+  --success: #2D8A4E;
+  --success-bg: #E8F5E9;
+  --warning: #E67E22;
+  --warning-bg: #FFF3E0;
+  --danger: #C0392B;
+  --danger-bg: #FDEDEC;
+  --info: #2471A3;
+  --info-bg: #EBF5FB;
+  --input-bg: #FFFDE7;
+  --input-border: #D4A843;
+  --shadow-sm: 0 1px 3px rgba(92,61,46,0.08);
+  --shadow-md: 0 4px 12px rgba(92,61,46,0.1);
+  --shadow-lg: 0 8px 32px rgba(92,61,46,0.12);
+  --shadow-xl: 0 16px 48px rgba(92,61,46,0.15);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+h1,h2,h3,h4 { font-family: 'Fredoka', sans-serif; }
+.hidden { display: none !important; }
+
+/* ═══ START SCREEN ═══ */
+#startScreen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #FFF8E7 0%, #FEF0D0 50%, #FFF5E1 100%);
+}
+#startScreen::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(212,168,67,0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(196,30,58,0.08) 0%, transparent 50%);
+  animation: bgFloat 20s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes bgFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(20px, -30px) rotate(1deg); }
+  66% { transform: translate(-15px, 20px) rotate(-1deg); }
+}
+.logo-container {
+  position: relative; z-index: 1;
+  margin-bottom: 12px;
+  animation: logoEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  text-align: center;
+}
+@keyframes logoEnter {
+  from { opacity: 0; transform: scale(0.8) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.logo-brand {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700; font-size: 58px; color: var(--brand-red);
+  text-shadow: 2px 2px 0 var(--brand-gold), 4px 4px 8px rgba(196,30,58,0.2);
+  line-height: 1; letter-spacing: -1px;
+}
+.logo-sub {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700; font-size: 34px; color: var(--brand-gold);
+  text-transform: uppercase; letter-spacing: 6px; line-height: 1; margin-top: 2px;
+}
+.logo-icons { font-size: 18px; margin-top: 6px; letter-spacing: 4px; }
+.start-subtitle {
+  font-size: 15px; color: var(--text-muted); margin-bottom: 48px;
+  letter-spacing: 2.5px; text-transform: uppercase; font-weight: 500;
+  animation: fadeUp 0.6s 0.3s both;
+  position: relative; z-index: 1;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.game-cards {
+  display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
+  position: relative; z-index: 1;
+}
+.game-card {
+  width: 260px; background: var(--surface-card);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 32px 24px; cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: var(--shadow-md); text-align: center;
+  animation: cardEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.game-card:nth-child(1) { animation-delay: 0.4s; }
+.game-card:nth-child(2) { animation-delay: 0.5s; }
+.game-card:nth-child(3) { animation-delay: 0.6s; }
+@keyframes cardEnter { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.game-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: var(--shadow-xl); border-color: var(--brand-gold); }
+.game-card-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; margin: 0 auto 16px;
+  font-family: 'Fredoka', sans-serif;
+}
+.game-card-icon.practice { background: #E8F5E9; color: var(--success); }
+.game-card-icon.round1 { background: #FFF3E0; color: var(--warning); }
+.game-card-icon.round2 { background: #FDEDEC; color: var(--danger); }
+.game-card-title { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+.game-card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.game-card-diff {
+  display: inline-block; margin-top: 16px; padding: 4px 14px;
+  border-radius: 20px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.diff-easy { background: #E8F5E9; color: var(--success); }
+.diff-medium { background: #FFF3E0; color: var(--warning); }
+.diff-hard { background: #FDEDEC; color: var(--danger); }
+
+/* ═══ GAME SCREEN ═══ */
+#gameScreen {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #FFF8E7 0%, #FEF0D0 50%, #FFF5E1 100%);
+}
+.top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px; background: white;
+  border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.top-bar-left { display: flex; align-items: center; gap: 16px; }
+.top-bar-logo-brand { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 18px; color: var(--brand-red); }
+.top-bar-logo-sub { font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 14px; color: var(--brand-gold); text-transform: uppercase; letter-spacing: 2px; margin-left: 4px; }
+.top-bar-mode {
+  font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600;
+  padding: 4px 14px; border-radius: 20px; color: white;
+}
+.mode-PR { background: var(--success); }
+.mode-R1 { background: var(--warning); }
+.mode-R2 { background: var(--danger); }
+.top-bar-week { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; }
+.top-bar-right { display: flex; gap: 8px; }
+.top-btn {
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  border: 1px solid var(--border); background: white; color: var(--text);
+}
+.top-btn:hover { background: var(--surface-alt); }
+.top-btn.danger { border-color: var(--danger); color: var(--danger); }
+.top-btn.danger:hover { background: var(--danger-bg); }
+
+.sticky-header {
+  position: sticky; top: 0; z-index: 100;
+  background: white;
+  box-shadow: 0 2px 12px rgba(92,61,46,0.08);
+}
+.tab-nav {
+  display: flex; gap: 0; padding: 0 24px;
+  background: white; border-bottom: 2px solid var(--border-light);
+}
+.tab-btn {
+  padding: 12px 24px; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; color: var(--text-muted);
+  background: none; border: none; cursor: pointer;
+  position: relative; transition: all 0.2s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--brand-red); }
+.tab-btn.active::after {
+  content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+  height: 3px; background: var(--brand-red); border-radius: 3px 3px 0 0;
+}
+.main-content { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+/* Week Progress */
+.week-progress {
+  display: flex; align-items: center; gap: 4px; margin-bottom: 24px;
+  padding: 16px 20px; background: white; border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-light);
+}
+.week-dot {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; font-family: 'Fredoka', sans-serif;
+  transition: all 0.3s; flex-shrink: 0;
+}
+.week-dot.completed { background: var(--success); color: white; }
+.week-dot.current { background: var(--brand-red); color: white; box-shadow: 0 0 0 4px rgba(196,30,58,0.2); transform: scale(1.1); }
+.week-dot.future { background: var(--border-light); color: var(--text-muted); }
+.week-connector { flex: 1; height: 3px; border-radius: 2px; min-width: 12px; }
+.week-connector.done { background: var(--success); }
+.week-connector.pending { background: var(--border-light); }
+
+/* Cards & Tables */
+.card {
+  background: white; border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm); margin-bottom: 20px;
+}
+.card-header {
+  padding: 14px 20px; font-family: 'Fredoka', sans-serif;
+  font-size: 16px; font-weight: 600;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 10px;
+}
+.card-header.inventory { background: linear-gradient(135deg, #EBF5FB, #D4E6F1); color: var(--info); }
+.card-header.planning { background: linear-gradient(135deg, #FEF9E7, #F9E79F); color: var(--brand-brown); }
+.card-header.mps { background: linear-gradient(135deg, #E8F8F5, #A3E4D7); color: #1A5276; }
+.card-header.mrp { background: linear-gradient(135deg, #F5EEF8, #D2B4DE); color: #6C3483; }
+.card-header.costs { background: linear-gradient(135deg, #FDEDEC, #F5B7B1); color: var(--danger); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  padding: 10px 12px; text-align: center; font-weight: 600;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text-muted); background: var(--surface-alt);
+  border-bottom: 2px solid var(--border); white-space: nowrap;
+}
+td {
+  padding: 8px 10px; text-align: center;
+  border-bottom: 1px solid var(--border-light);
+  font-variant-numeric: tabular-nums; font-weight: 500;
+}
+tr.current-week { background: rgba(212,168,67,0.08); }
+tr.future-week td { color: var(--border); }
+td.negative { color: var(--danger); font-weight: 700; }
+td.warning-cell { color: var(--warning); font-weight: 700; }
+td.highlight-yellow { background: var(--input-bg); }
+td.highlight-lightYellow { background: #FFFEF5; }
+td.service-good { background: var(--success-bg); color: var(--success); font-weight: 700; }
+td.service-bad { background: var(--danger-bg); color: var(--danger); font-weight: 700; }
+td.sufficient { color: var(--success); font-weight: 700; }
+td.insufficient { color: var(--danger); font-weight: 700; }
+
+/* Service Failure Toast */
+.service-toast {
+  padding: 14px 20px; border-radius: var(--radius-md); margin-bottom: 16px;
+  animation: toastSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex; align-items: center; gap: 12px;
+  font-size: 14px; font-weight: 500; line-height: 1.4;
+  border-left: 5px solid;
+}
+.service-toast .toast-emoji { font-size: 28px; flex-shrink: 0; }
+.service-toast .toast-text { flex: 1; }
+.service-toast .toast-pct { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 18px; flex-shrink: 0; }
+.service-toast.tier-perfect { background: #E8F5E9; border-color: var(--success); color: #1B5E20; }
+.service-toast.tier-mild { background: #FEF9E7; border-color: #F4D03F; color: #7D6608; }
+.service-toast.tier-concern { background: #FFF3E0; border-color: var(--warning); color: #7D5A29; }
+.service-toast.tier-bad { background: #FDEDEC; border-color: #E74C3C; color: #7B241C; }
+.service-toast.tier-dire { background: #F4ECF7; border-color: #8E44AD; color: #6C3483; }
+.service-toast.tier-catastrophic { background: #2C3E50; border-color: #E74C3C; color: #ECF0F1; }
+@keyframes toastSlide { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+/* Input Section */
+.input-section {
+  background: white; border: 2px solid var(--brand-gold);
+  border-radius: var(--radius-lg); padding: 24px;
+  box-shadow: var(--shadow-md), 0 0 0 4px rgba(212,168,67,0.1);
+  margin-bottom: 20px;
+}
+.input-title {
+  font-family: 'Fredoka', sans-serif; font-size: 18px;
+  font-weight: 600; color: var(--brand-brown); margin-bottom: 20px;
+}
+.input-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin-bottom: 20px;
+}
+.input-field { display: flex; flex-direction: column; gap: 6px; }
+.input-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.input-sublabel { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+.input-field input {
+  padding: 10px 14px; border: 2px solid var(--input-border);
+  border-radius: var(--radius-sm); background: var(--input-bg);
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600;
+  color: var(--text); text-align: center; transition: all 0.2s; width: 100%;
+}
+.input-field input:focus { outline: none; border-color: var(--brand-red); box-shadow: 0 0 0 3px rgba(196,30,58,0.15); }
+.input-field input.input-error { border-color: var(--danger); background: var(--danger-bg); }
+.input-error-msg { color: var(--danger); font-size: 11px; }
+.forecast-callout {
+  background: linear-gradient(135deg, #FEF9E7, #F9E79F);
+  border: 2px solid var(--brand-gold); border-radius: var(--radius-md);
+  padding: 16px 20px; text-align: center; margin-bottom: 20px;
+}
+.forecast-callout-label {
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
+}
+.forecast-callout-value {
+  font-family: 'Fredoka', sans-serif; font-size: 36px; font-weight: 700;
+  color: var(--brand-brown); line-height: 1.1;
+}
+.forecast-callout-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.input-with-forecast { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: start; }
+@media (max-width: 768px) { .input-with-forecast { grid-template-columns: 1fr; } }
+td.peek-value { color: var(--text-muted); font-style: italic; }
+.submit-btn {
+  padding: 12px 32px; background: var(--brand-red); color: white; border: none;
+  border-radius: var(--radius-md); font-family: 'Fredoka', sans-serif;
+  font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(196,30,58,0.3);
+}
+.submit-btn:hover { background: var(--brand-red-dark); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(196,30,58,0.4); }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Disruption Banner */
+.disruption-banner {
+  padding: 16px 24px; border-radius: var(--radius-md); margin-bottom: 20px;
+  animation: bannerSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 14px; line-height: 1.6; border-left: 5px solid;
+}
+.disruption-banner.warning-type { background: var(--warning-bg); border-color: var(--warning); color: #7D5A29; }
+.disruption-banner.danger-type { background: var(--danger-bg); border-color: var(--danger); color: #7B241C; }
+.disruption-title { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+@keyframes bannerSlide { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Reveal Banner */
+.reveal-banner {
+  padding: 20px 24px; border: 2px solid var(--info);
+  border-radius: var(--radius-md); margin-bottom: 20px;
+  text-align: center; animation: revealPulse 0.6s ease;
+}
+.reveal-banner.order-type { background: linear-gradient(135deg, var(--info-bg), #D6EAF8); border-color: var(--info); }
+.reveal-banner.forecast-type { background: linear-gradient(135deg, #FEF9E7, #F9E79F); border-color: var(--brand-gold); }
+.reveal-banner h3 { font-size: 18px; margin-bottom: 4px; }
+.reveal-banner .reveal-number { font-family: 'Fredoka', sans-serif; font-size: 42px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.reveal-banner .reveal-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.timer-display {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 20px; background: rgba(212,168,67,0.15);
+  border-radius: 20px; font-family: 'Fredoka', sans-serif;
+  font-size: 14px; color: var(--brand-brown); margin-top: 12px;
+}
+.timer-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-gold); animation: timerBlink 1s infinite; }
+@keyframes timerBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes revealPulse { 0% { opacity: 0; transform: scale(0.95); } 50% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
+
+/* Summary Cards */
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.summary-card {
+  background: white; border: 1px solid var(--border-light);
+  border-radius: var(--radius-md); padding: 16px; text-align: center; box-shadow: var(--shadow-sm);
+}
+.summary-card.total-card { border: 2px solid var(--brand-red); }
+.summary-card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+.summary-card-value { font-family: 'Fredoka', sans-serif; font-size: 28px; font-weight: 700; color: var(--brand-red); }
+.chart-container { padding: 24px; height: 350px; position: relative; }
+
+/* Overlay / Modal */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(45,27,14,0.6); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; z-index: 200;
+  animation: fadeIn 0.3s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: white; border-radius: var(--radius-xl); padding: 40px;
+  max-width: 600px; width: 90%; text-align: center;
+  box-shadow: var(--shadow-xl); animation: modalEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modalEnter { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.modal h2 { font-size: 28px; margin-bottom: 8px; }
+.modal-total { font-family: 'Fredoka', sans-serif; font-size: 48px; font-weight: 700; color: var(--brand-red); margin: 16px 0; }
+.modal-breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 24px 0; }
+.modal-item { padding: 12px; border-radius: var(--radius-md); background: var(--surface-alt); }
+.modal-item-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; }
+.modal-item-value { font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); margin-top: 4px; }
+.modal-actions { display: flex; gap: 12px; justify-content: center; margin-top: 24px; }
+.modal-service { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
+
+/* Confirm Dialog */
+.confirm-modal { max-width: 400px; }
+.confirm-modal h3 { font-size: 20px; margin-bottom: 12px; }
+.confirm-modal p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 12px; justify-content: center; }
+.btn-cancel {
+  padding: 10px 24px; border: 1px solid var(--border); background: white;
+  border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer;
+}
+.btn-cancel:hover { background: var(--surface-alt); }
+.btn-confirm-danger {
+  padding: 10px 24px; border: none; background: var(--danger); color: white;
+  border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer;
+}
+.btn-confirm-danger:hover { background: #A93226; }
+
+@media (max-width: 768px) {
+  .main-content { padding: 16px; }
+  .input-grid { grid-template-columns: 1fr 1fr; }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .modal-breakdown { grid-template-columns: 1fr; }
+  .top-bar { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+  .game-cards { flex-direction: column; align-items: center; }
+  .tab-btn { padding: 10px 14px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ START SCREEN ═══════════════ -->
+<div id="startScreen">
+  <div class="logo-container">
+    <div class="logo-brand">Premier</div>
+    <div class="logo-sub">Treats</div>
+    <div class="logo-icons">🍪 🍩 🍬 🍫 🧁</div>
+  </div>
+  <div class="start-subtitle">Supply Chain Planning Simulation</div>
+  <div class="game-cards">
+    <div class="game-card" onclick="startGame('PR')">
+      <div class="game-card-icon practice">PR</div>
+      <div class="game-card-title">Practice Round</div>
+      <div class="game-card-desc">Learn the basics of production planning and raw material ordering with no disruptions.</div>
+      <div class="game-card-diff diff-easy">Easy</div>
+    </div>
+    <div class="game-card" onclick="startGame('R1')">
+      <div class="game-card-icon round1">R1</div>
+      <div class="game-card-title">Round 1</div>
+      <div class="game-card-desc">Same mechanics, but watch out — a supply chain disruption may catch you off guard.</div>
+      <div class="game-card-diff diff-medium">Medium</div>
+    </div>
+    <div class="game-card" onclick="startGame('R2')">
+      <div class="game-card-icon round2">R2</div>
+      <div class="game-card-title">Round 2</div>
+      <div class="game-card-desc">Multiple disruptions test your planning resilience. Can you keep costs down?</div>
+      <div class="game-card-diff diff-hard">Hard</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME SCREEN ═══════════════ -->
+<div id="gameScreen" class="hidden">
+  <!-- Sticky Header: Top Bar + Tab Nav -->
+  <div class="sticky-header">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <span><span class="top-bar-logo-brand">Premier</span><span class="top-bar-logo-sub">Treats</span></span>
+        <span id="topBarMode" class="top-bar-mode"></span>
+        <span id="topBarWeek" class="top-bar-week"></span>
+      </div>
+      <div class="top-bar-right">
+        <button class="top-btn" onclick="confirmHome()">🏠 Home</button>
+        <button class="top-btn danger" onclick="confirmRestart()">🔄 Restart</button>
+      </div>
+    </div>
+
+    <!-- Tab Nav -->
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">📊 Overview</button>
+      <button class="tab-btn" data-tab="mps" onclick="switchTab('mps')">🏭 MPS</button>
+      <button class="tab-btn" data-tab="mrp" onclick="switchTab('mrp')">📦 MRP</button>
+      <button class="tab-btn" data-tab="costs" onclick="switchTab('costs')">💰 Costs</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div id="weekProgress"></div>
+    <div id="disruptionArea"></div>
+    <div id="revealArea"></div>
+    <div id="inputArea"></div>
+    <div id="tabContent"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ OVERLAYS ═══════════════ -->
+<div id="confirmOverlay" class="overlay hidden" onclick="closeConfirm()">
+  <div class="modal confirm-modal" onclick="event.stopPropagation()">
+    <h3 id="confirmTitle"></h3>
+    <p id="confirmMessage"></p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-confirm-danger" id="confirmBtn">Yes, proceed</button>
+    </div>
+  </div>
+</div>
+
+<div id="gameOverOverlay" class="overlay hidden">
+  <div class="modal">
+    <div style="font-size:48px;margin-bottom:8px">🏁</div>
+    <h2 id="gameOverTitle"></h2>
+    <p style="color:var(--text-muted)">Here are your final results</p>
+    <div class="modal-total" id="gameOverTotal"></div>
+    <p style="color:var(--text-muted);font-size:13px">Total Supply Chain Cost</p>
+    <div class="modal-breakdown">
+      <div class="modal-item"><div class="modal-item-label">RM Inventory</div><div class="modal-item-value" id="goRM"></div></div>
+      <div class="modal-item"><div class="modal-item-label">FG Inventory</div><div class="modal-item-value" id="goFG"></div></div>
+      <div class="modal-item"><div class="modal-item-label">Service Failure</div><div class="modal-item-value" id="goSF"></div></div>
+    </div>
+    <p class="modal-service" id="goService"></p>
+    <div class="modal-actions">
+      <button class="top-btn" onclick="goHome()">🏠 Home</button>
+      <button class="submit-btn" onclick="restartGame()">🔄 Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   GAME ENGINE (tested & verified)
+   ═══════════════════════════════════════════════════════════════ */
+const DEMAND_DATA = {
+  PR: [
+    {demand:900,forecast:800},{demand:800,forecast:900},{demand:900,forecast:700},
+    {demand:700,forecast:600},{demand:600,forecast:1200},{demand:1200,forecast:1000},
+    {demand:1000,forecast:900},{demand:900,forecast:1000},{demand:1000,forecast:null}
+  ],
+  R1: [
+    {demand:900,forecast:800},{demand:1000,forecast:900},{demand:1200,forecast:1000},
+    {demand:900,forecast:900},{demand:700,forecast:800},{demand:1000,forecast:900},
+    {demand:1200,forecast:1000},{demand:1000,forecast:1000},{demand:1300,forecast:null}
+  ],
+  R2: [
+    {demand:900,forecast:800},{demand:600,forecast:800},{demand:700,forecast:800},
+    {demand:800,forecast:800},{demand:1000,forecast:1000},{demand:1200,forecast:1000},
+    {demand:1100,forecast:900},{demand:700,forecast:900},{demand:1100,forecast:null}
+  ]
+};
+
+const INITIAL = {
+  fgOpeningInventory:400, fgProduction:500,
+  rm1Opening:500, rm1Receipt:500, rm2Opening:250, rm2Receipt:250, rm3Opening:750, rm3Receipt:750,
+  rm1Week1Receipt:4000, rm2Week1Receipt:1200, rm3Week1Receipt:4200
+};
+const BOM = {rm1:2, rm2:1, rm3:3};
+const MAX_PRODUCTION = 1200;
+const COSTS = {rm:0.5, fg:10, serviceFail:20};
+
+let G = null; // game state
+let activeTab = 'overview';
+let costChart = null;
+
+function getRMReceipt(week, rmType) {
+  if (week === 0) return {rm1:INITIAL.rm1Receipt, rm2:INITIAL.rm2Receipt, rm3:INITIAL.rm3Receipt}[rmType];
+  if (week === 1) return {rm1:INITIAL.rm1Week1Receipt, rm2:INITIAL.rm2Week1Receipt, rm3:INITIAL.rm3Week1Receipt}[rmType];
+  const orderWeek = week - 2;
+  if (orderWeek < 0 || orderWeek >= G.playerInputs.length) return 0;
+  const input = G.playerInputs[orderWeek];
+  let order = {rm1:input.rm1Order, rm2:input.rm2Order, rm3:input.rm3Order}[rmType];
+
+  if (G.mode === 'R1' && rmType === 'rm1') {
+    if (week === 4) return 0;
+    if (week === 5) {
+      const w2 = G.playerInputs[2] ? G.playerInputs[2].rm1Order : 0;
+      const w3 = G.playerInputs[3] ? G.playerInputs[3].rm1Order : 0;
+      return w2 + w3;
+    }
+  }
+  if (G.mode === 'R2' && rmType === 'rm3' && week === 5) {
+    return Math.floor((G.playerInputs[3] ? G.playerInputs[3].rm3Order : 0) * 0.5);
+  }
+  return order;
+}
+
+function getEffectivePO(week, rawPO) {
+  if (G.mode === 'R2' && week === 5) return Math.floor(rawPO * 0.5);
+  return rawPO;
+}
+
+function createInitialState(mode) {
+  const d = DEMAND_DATA[mode][0];
+  const rm1T = INITIAL.rm1Opening+INITIAL.rm1Receipt, rm2T = INITIAL.rm2Opening+INITIAL.rm2Receipt, rm3T = INITIAL.rm3Opening+INITIAL.rm3Receipt;
+  const fgP = INITIAL.fgProduction, fgT = INITIAL.fgOpeningInventory+fgP;
+  const shipped = Math.min(d.demand, fgT), closingInv = Math.max(0, fgT-d.demand), lost = Math.max(0, d.demand-fgT);
+  const sl = d.demand===0 ? null : shipped/d.demand;
+  const rm1U=fgP*BOM.rm1, rm2U=fgP*BOM.rm2, rm3U=fgP*BOM.rm3;
+
+  return {
+    mode, currentWeek:0, phase:'input', weeks:[{
+      week:0, fgOpening:INITIAL.fgOpeningInventory, fgProdOrder:fgP, fgProdOrderEffective:fgP,
+      fgProduction:fgP, fgTotal:fgT, customerOrder:d.demand, shipped, closingInv, lostSales:lost, serviceLevel:sl,
+      forecast:d.forecast, prodOrderInput:null, rm1OrderInput:null, rm2OrderInput:null, rm3OrderInput:null,
+      rm1:{opening:INITIAL.rm1Opening, receipt:INITIAL.rm1Receipt, total:rm1T, required:fgP*2, maxFG:rm1T/2, used:rm1U, closing:rm1T-rm1U},
+      rm2:{opening:INITIAL.rm2Opening, receipt:INITIAL.rm2Receipt, total:rm2T, required:fgP, maxFG:rm2T, used:rm2U, closing:rm2T-rm2U},
+      rm3:{opening:INITIAL.rm3Opening, receipt:INITIAL.rm3Receipt, total:rm3T, required:fgP*3, maxFG:rm3T/3, used:rm3U, closing:rm3T-rm3U}
+    }],
+    playerInputs:[], disruptions:[], gameOver:false
+  };
+}
+
+function computeWeek(weekNum) {
+  const prev = G.weeks[weekNum-1];
+  const input = G.playerInputs[weekNum-1];
+  if (!input) return null;
+  const rawPO = input.prodOrder, effPO = getEffectivePO(weekNum, rawPO);
+  const rm1O=prev.rm1.closing, rm2O=prev.rm2.closing, rm3O=prev.rm3.closing;
+  const rm1R=getRMReceipt(weekNum,'rm1'), rm2R=getRMReceipt(weekNum,'rm2'), rm3R=getRMReceipt(weekNum,'rm3');
+  const rm1T=rm1O+rm1R, rm2T=rm2O+rm2R, rm3T=rm3O+rm3R;
+  const max1=Math.floor(rm1T/BOM.rm1), max2=Math.floor(rm2T/BOM.rm2), max3=Math.floor(rm3T/BOM.rm3);
+  const maxP=Math.min(max1,max2,max3);
+  const fgProd=Math.min(effPO,maxP);
+  const rm1U=fgProd*BOM.rm1, rm2U=fgProd*BOM.rm2, rm3U=fgProd*BOM.rm3;
+  const fgO=prev.closingInv, fgT=fgO+fgProd;
+  const demand=DEMAND_DATA[G.mode][weekNum].demand;
+  const shipped=Math.min(demand,fgT), closingInv=Math.max(0,fgT-demand), lost=Math.max(0,demand-fgT);
+  const sl=demand===0?null:shipped/demand;
+  const forecast=DEMAND_DATA[G.mode][weekNum].forecast;
+
+  return {
+    week:weekNum, fgOpening:fgO, fgProdOrder:rawPO, fgProdOrderEffective:effPO,
+    fgProduction:fgProd, fgTotal:fgT, customerOrder:demand, shipped, closingInv, lostSales:lost, serviceLevel:sl,
+    forecast, prodOrderInput:null, rm1OrderInput:null, rm2OrderInput:null, rm3OrderInput:null,
+    rm1:{opening:rm1O, receipt:rm1R, total:rm1T, required:effPO*BOM.rm1, maxFG:max1, used:rm1U, closing:rm1T-rm1U},
+    rm2:{opening:rm2O, receipt:rm2R, total:rm2T, required:effPO*BOM.rm2, maxFG:max2, used:rm2U, closing:rm2T-rm2U},
+    rm3:{opening:rm3O, receipt:rm3R, total:rm3T, required:effPO*BOM.rm3, maxFG:max3, used:rm3U, closing:rm3T-rm3U}
+  };
+}
+
+function getDisruption(submittedWeek) {
+  if (G.mode==='R1' && submittedWeek===2 && G.playerInputs[2] && G.playerInputs[2].rm1Order>0)
+    return {type:'warning',title:'⚠️ Supplier Notification',message:'Unfortunately the shipment of RM1 ordered in Week 2 is delayed by a week and will arrive in Week 5. Any additional RM1 orders placed in Week 3 will be added and delivered in Week 5 as normal. The supplier apologises for any inconvenience caused.'};
+  if (G.mode==='R2' && submittedWeek===3 && G.playerInputs[3] && G.playerInputs[3].rm3Order>0)
+    return {type:'warning',title:'⚠️ Supplier Notification',message:'Unfortunately the supplier can only fulfill 50% of the RM3 order placed in Week 3 for delivery in Week 5. Your order has been received and cannot be changed! The supplier apologises for any inconvenience caused.'};
+  if (G.mode==='R2' && submittedWeek===4 && G.playerInputs[4] && G.playerInputs[4].prodOrder>0)
+    return {type:'danger',title:'🏭 Factory Notification',message:'Unfortunately, due to a line breakdown, the factory can only accept 50% of your placed order for next week. Your order has been received and cannot be changed! The factory apologises for any inconvenience caused.'};
+  return null;
+}
+
+function computeAllCosts() {
+  return G.weeks.map(w => {
+    const rm = (w.rm1.closing+w.rm2.closing+w.rm3.closing)*COSTS.rm;
+    const fg = w.closingInv*COSTS.fg;
+    const sf = w.lostSales*COSTS.serviceFail;
+    return {week:w.week, rmInventory:rm, fgInventory:fg, serviceFailure:sf, total:rm+fg+sf};
+  });
+}
+
+/* Compute peek-ahead values for the next week row (known before player acts) */
+function getNextWeekPeek(nextWeekNum) {
+  if (nextWeekNum > 8) return null;
+  const lastWeek = G.weeks[G.weeks.length - 1];
+  if (!lastWeek || lastWeek.week !== nextWeekNum - 1) return null;
+  const fgOpening = lastWeek.closingInv;
+  // RM openings are last week's closings
+  const rm1Opening = lastWeek.rm1.closing;
+  const rm2Opening = lastWeek.rm2.closing;
+  const rm3Opening = lastWeek.rm3.closing;
+  // RM receipts: orders placed 2 weeks ago
+  const rm1Receipt = getRMReceipt(nextWeekNum, 'rm1');
+  const rm2Receipt = getRMReceipt(nextWeekNum, 'rm2');
+  const rm3Receipt = getRMReceipt(nextWeekNum, 'rm3');
+  return { fgOpening, rm1Opening, rm1Receipt, rm2Opening, rm2Receipt, rm3Opening, rm3Receipt };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UI HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+const fmt = n => n.toLocaleString('en-GB');
+const fmtCurrency = n => '£'+n.toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:0});
+const fmtPct = v => (v===null||v===undefined||v==='N/A') ? 'N/A' : (v*100).toFixed(1)+'%';
+const $ = id => document.getElementById(id);
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+  renderTabContent();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GAME FLOW
+   ═══════════════════════════════════════════════════════════════ */
+function startGame(mode) {
+  G = createInitialState(mode);
+  $('startScreen').classList.add('hidden');
+  $('gameScreen').classList.remove('hidden');
+  $('gameOverOverlay').classList.add('hidden');
+  activeTab = 'overview';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab==='overview'));
+  if (costChart) { costChart.destroy(); costChart = null; }
+
+  // Week 0 reveal sequence: order -> service -> forecast -> input
+  G.phase = 'reveal_order';
+  renderAll();
+  setTimeout(() => {
+    G.phase = 'reveal_service';
+    renderAll();
+    setTimeout(() => {
+      G.phase = 'reveal_forecast';
+      renderAll();
+      setTimeout(() => {
+        G.phase = 'input';
+        renderAll();
+        setTimeout(() => { const inp = document.querySelector('#inputArea input'); if (inp) inp.focus(); }, 50);
+      }, 4000);
+    }, 6000);
+  }, 5000);
+}
+
+function handleSubmit() {
+  const poEl=$('inp_po'), rm1El=$('inp_rm1'), rm2El=$('inp_rm2'), rm3El=$('inp_rm3');
+  // Treat empty or NaN as 0
+  const po=poEl.value.trim()===''?0:parseInt(poEl.value);
+  const rm1=rm1El.value.trim()===''?0:parseInt(rm1El.value);
+  const rm2=rm2El.value.trim()===''?0:parseInt(rm2El.value);
+  const rm3=rm3El.value.trim()===''?0:parseInt(rm3El.value);
+  let hasError = false;
+
+  // Reset errors
+  [poEl,rm1El,rm2El,rm3El].forEach(el => { el.classList.remove('input-error'); });
+  document.querySelectorAll('.input-error-msg').forEach(el => el.textContent='');
+
+  if (isNaN(po)||po<0||po>MAX_PRODUCTION) { poEl.classList.add('input-error'); $('err_po').textContent=`Enter 0–${fmt(MAX_PRODUCTION)}`; hasError=true; }
+  if (isNaN(rm1)||rm1<0) { rm1El.classList.add('input-error'); $('err_rm1').textContent='Enter a number ≥ 0'; hasError=true; }
+  if (isNaN(rm2)||rm2<0) { rm2El.classList.add('input-error'); $('err_rm2').textContent='Enter a number ≥ 0'; hasError=true; }
+  if (isNaN(rm3)||rm3<0) { rm3El.classList.add('input-error'); $('err_rm3').textContent='Enter a number ≥ 0'; hasError=true; }
+  if (hasError) return;
+
+  // Record input
+  G.playerInputs.push({prodOrder:po, rm1Order:rm1, rm2Order:rm2, rm3Order:rm3});
+
+  // Store player decisions on the current week row
+  const cw = G.currentWeek;
+  G.weeks[cw].prodOrderInput = po;
+  G.weeks[cw].rm1OrderInput = rm1;
+  G.weeks[cw].rm2OrderInput = rm2;
+  G.weeks[cw].rm3OrderInput = rm3;
+
+  // Compute next week
+  const newWeekNum = cw + 1;
+  const weekData = computeWeek(newWeekNum);
+  if (weekData) G.weeks.push(weekData);
+
+  // Check for disruption
+  const disruption = getDisruption(cw);
+  if (disruption) G.disruptions.push({week:cw, ...disruption});
+
+  G.currentWeek = newWeekNum;
+
+  // Week 8: final reveal — show demand, then service, then game over (no forecast, no input)
+  if (newWeekNum === 8) {
+    G.phase = 'reveal_order';
+    renderAll();
+
+    setTimeout(() => {
+      G.phase = 'reveal_service';
+      renderAll();
+      setTimeout(() => {
+        G.gameOver = true;
+        G.phase = 'done';
+        renderAll();
+        setTimeout(showGameOver, 800);
+      }, 6000);
+    }, 5000);
+    return;
+  }
+
+  // Weeks 1–7: reveal order -> service -> forecast -> input
+  G.phase = 'reveal_order';
+  renderAll();
+
+  setTimeout(() => {
+    G.phase = 'reveal_service';
+    renderAll();
+    setTimeout(() => {
+      G.phase = 'reveal_forecast';
+      renderAll();
+      setTimeout(() => {
+        G.phase = 'input';
+        renderAll();
+        setTimeout(() => { const inp = document.querySelector('#inputArea input'); if (inp) inp.focus(); }, 50);
+      }, 4000);
+    }, 6000);
+  }, 5000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDERING
+   ═══════════════════════════════════════════════════════════════ */
+function renderAll() {
+  renderTopBar();
+  renderWeekProgress();
+  renderDisruption();
+  renderReveal();
+  renderInput();
+  renderTabContent();
+}
+
+function renderTopBar() {
+  const modeLabels = {PR:'Practice',R1:'Round 1',R2:'Round 2'};
+  $('topBarMode').textContent = modeLabels[G.mode];
+  $('topBarMode').className = 'top-bar-mode mode-'+G.mode;
+  $('topBarWeek').textContent = G.gameOver ? 'Game Complete' : G.currentWeek === 8 ? 'Week 8 — Final Results' : `Week ${G.currentWeek} of 7`;
+}
+
+function renderWeekProgress() {
+  let html = '<div class="week-progress">';
+  for (let i=0; i<=8; i++) {
+    const cls = (i<G.currentWeek||G.gameOver) ? 'completed' : (i===G.currentWeek&&!G.gameOver) ? 'current' : 'future';
+    const label = (i<G.currentWeek||G.gameOver) ? '✓' : i;
+    html += `<div class="week-dot ${cls}">${label}</div>`;
+    if (i<8) html += `<div class="week-connector ${(i<G.currentWeek||G.gameOver)?'done':'pending'}"></div>`;
+  }
+  html += '</div>';
+  $('weekProgress').innerHTML = html;
+}
+
+function renderDisruption() {
+  const last = G.disruptions.length ? G.disruptions[G.disruptions.length-1] : null;
+  if (last && last.week === G.currentWeek-1 && (G.phase==='reveal_order'||G.phase==='reveal_service'||G.phase==='reveal_forecast'||G.phase==='input')) {
+    $('disruptionArea').innerHTML = `<div class="disruption-banner ${last.type}-type"><div class="disruption-title">${last.title}</div>${last.message}</div>`;
+  } else {
+    $('disruptionArea').innerHTML = '';
+  }
+}
+
+function getServiceMessage(serviceLevel) {
+  if (serviceLevel === null || serviceLevel === undefined) return null;
+  const pct = serviceLevel * 100;
+  const msgs = {
+    tier100: [
+      { emoji: '🎯', text: "Perfect service! Every customer got exactly what they ordered. Take a bow." },
+      { emoji: '🏆', text: "Flawless execution! The warehouse team are doing a little victory dance." },
+      { emoji: '⭐', text: "100% service — textbook stuff. Supply chain perfection achieved." },
+    ],
+    tier90: [
+      { emoji: '😬', text: "Cutting it a bit fine there! A few customers are tapping their watches." },
+      { emoji: '🤨', text: "Almost nailed it… but 'almost' doesn't fill shopping baskets." },
+      { emoji: '😅', text: "Close, but no cigar. Some shelves are looking a tad sparse." },
+    ],
+    tier80: [
+      { emoji: '😤', text: "Customers are not very happy. Your complaint inbox is heating up." },
+      { emoji: '📞', text: "The customer service line is ringing off the hook. Might want to fix that." },
+      { emoji: '🙄', text: "Shoppers are starting to write strongly-worded letters." },
+    ],
+    tier70: [
+      { emoji: '😡', text: "People are switching to the competition. Your brand reputation is taking a hit." },
+      { emoji: '🏪', text: "Empty shelves spotted! Retail partners are scheduling 'urgent' calls." },
+      { emoji: '📉', text: "Your Net Promoter Score just fell off a cliff. Marketing is in crisis mode." },
+    ],
+    tier50: [
+      { emoji: '🔥', text: "It's a supply chain dumpster fire. The CEO wants a word. Bring a helmet." },
+      { emoji: '📰', text: "Congratulations — you've made the trade press. Not in a good way." },
+      { emoji: '💀', text: "Half your customers can't get product. Competitors are sending you thank-you cards." },
+    ],
+    tierBelow: [
+      { emoji: '☠️', text: "Absolute carnage. The board is assembling. Someone's printed your CV for you." },
+      { emoji: '🪦', text: "R.I.P. customer satisfaction. A memorial service is being planned for your supply chain." },
+      { emoji: '🏴‍☠️', text: "This isn't a supply chain, it's a supply catastrophe. Are you sure you read the instructions?" },
+    ],
+  };
+
+  let tier, tierClass;
+  if (pct >= 100) { tier = msgs.tier100; tierClass = 'tier-perfect'; }
+  else if (pct >= 90) { tier = msgs.tier90; tierClass = 'tier-mild'; }
+  else if (pct >= 80) { tier = msgs.tier80; tierClass = 'tier-concern'; }
+  else if (pct >= 70) { tier = msgs.tier70; tierClass = 'tier-bad'; }
+  else if (pct >= 50) { tier = msgs.tier50; tierClass = 'tier-dire'; }
+  else { tier = msgs.tierBelow; tierClass = 'tier-catastrophic'; }
+
+  const pick = tier[Math.floor(Math.random() * tier.length)];
+  return { ...pick, tierClass, pct };
+}
+
+function renderReveal() {
+  const cw = G.currentWeek;
+  if (G.phase==='reveal_order') {
+    const wData = G.weeks.find(w=>w.week===cw);
+    if (wData) {
+      const timerNote = `<div class="timer-display"><div class="timer-dot"></div>Checking service level…</div>`;
+      $('revealArea').innerHTML = `<div class="reveal-banner order-type">
+        <h3 style="color:var(--info)">📬 Customer Order for Week ${cw}</h3>
+        <div class="reveal-number">${fmt(wData.customerOrder)}</div>
+        <div class="reveal-sub">units ordered</div>
+        ${timerNote}
+      </div>`;
+    }
+  } else if (G.phase==='reveal_service') {
+    const wData = G.weeks.find(w=>w.week===cw);
+    if (wData) {
+      const sMsg = getServiceMessage(wData.serviceLevel);
+      if (sMsg) {
+        const borderColor = sMsg.tierClass==='tier-perfect' ? 'var(--success)' : sMsg.tierClass==='tier-mild' ? '#F4D03F' : sMsg.tierClass==='tier-concern' ? 'var(--warning)' : sMsg.tierClass==='tier-bad' ? '#E74C3C' : sMsg.tierClass==='tier-dire' ? '#8E44AD' : '#E74C3C';
+        const bgMap = { 'tier-perfect':'linear-gradient(135deg,#E8F5E9,#C8E6C9)', 'tier-mild':'linear-gradient(135deg,#FEF9E7,#F9E79F)', 'tier-concern':'linear-gradient(135deg,#FFF3E0,#FFE0B2)', 'tier-bad':'linear-gradient(135deg,#FDEDEC,#F5B7B1)', 'tier-dire':'linear-gradient(135deg,#F4ECF7,#D2B4DE)', 'tier-catastrophic':'linear-gradient(135deg,#2C3E50,#34495E)' };
+        const textColor = sMsg.tierClass==='tier-catastrophic' ? '#ECF0F1' : 'var(--text)';
+        const subColor = sMsg.tierClass==='tier-catastrophic' ? '#BDC3C7' : 'var(--text-muted)';
+        const timerNote = cw < 8
+          ? `<div class="timer-display"><div class="timer-dot"></div>Revealing forecast…</div>`
+          : `<div class="timer-display"><div class="timer-dot"></div>Final week — calculating results…</div>`;
+        $('revealArea').innerHTML = `<div class="reveal-banner" style="background:${bgMap[sMsg.tierClass]};border-color:${borderColor}">
+          <h3 style="color:${subColor}">${sMsg.emoji} Service Level — Week ${cw}</h3>
+          <div class="reveal-number" style="color:${textColor}">${sMsg.pct.toFixed(1)}%</div>
+          <div class="reveal-sub" style="color:${subColor};font-size:14px;max-width:400px;margin:4px auto 0">${sMsg.text}</div>
+          ${timerNote}
+        </div>`;
+      }
+    }
+  } else if (G.phase==='reveal_forecast') {
+    const wData = G.weeks.find(w=>w.week===cw);
+    if (wData) {
+      const fcLabel = cw < 8 ? `Forecast for Week ${cw+1}` : 'Final Week — No Forecast';
+      const fcVal = wData.forecast!==null ? fmt(wData.forecast) : 'N/A';
+      $('revealArea').innerHTML = `<div class="reveal-banner forecast-type">
+        <h3 style="color:var(--brand-brown)">🔮 ${fcLabel}</h3>
+        <div class="reveal-number" style="color:var(--brand-brown)">${fcVal}</div>
+        <div class="reveal-sub">expected units next week</div>
+      </div>`;
+    }
+  } else {
+    $('revealArea').innerHTML = '';
+  }
+}
+
+function renderInput() {
+  if (G.phase!=='input'||G.gameOver||G.currentWeek>7) { $('inputArea').innerHTML=''; return; }
+  const cw = G.currentWeek;
+  const wData = G.weeks.find(w=>w.week===cw);
+  const fc = wData && wData.forecast !== null && wData.forecast !== undefined ? fmt(wData.forecast) : null;
+  const isFinalWeek = (cw === 7);
+
+  let fcHtml = '';
+  if (fc !== null) {
+    fcHtml = `<div class="forecast-callout">
+      <div class="forecast-callout-label">🔮 Forecast for Week ${cw+1}</div>
+      <div class="forecast-callout-value">${fc}</div>
+      <div class="forecast-callout-sub">units expected</div>
+    </div>`;
+  } else {
+    fcHtml = `<div class="forecast-callout" style="border-color:var(--border);background:var(--surface-alt)">
+      <div class="forecast-callout-label">Week ${cw+1}</div>
+      <div class="forecast-callout-value" style="font-size:20px;color:var(--text-muted)">Final week<br>No forecast</div>
+    </div>`;
+  }
+
+  const finalBanner = isFinalWeek
+    ? `<div style="padding:12px 16px;background:linear-gradient(135deg,#FDEDEC,#F5B7B1);border:1px solid var(--danger);border-radius:var(--radius-md);margin-bottom:16px;text-align:center;font-weight:600;color:#7B241C;font-size:14px">
+        🏁 These are your final orders — Week 8 demand will be revealed after you submit.
+      </div>`
+    : '';
+
+  $('inputArea').innerHTML = `<div class="input-section">
+    <div class="input-title">✏️ Week ${cw} — Enter your planning decisions</div>
+    ${finalBanner}
+    <div class="input-with-forecast">
+      ${fcHtml}
+      <div>
+        <div class="input-grid">
+          <div class="input-field">
+            <label class="input-label">Production Order <span class="input-sublabel">(max ${fmt(MAX_PRODUCTION)})</span></label>
+            <input type="number" id="inp_po" min="0" max="${MAX_PRODUCTION}" placeholder="0 – ${fmt(MAX_PRODUCTION)}" onkeydown="if(event.key==='Enter')handleSubmit()">
+            <span class="input-error-msg" id="err_po"></span>
+          </div>
+          <div class="input-field">
+            <label class="input-label">RM1 Order <span class="input-sublabel">(2/FG, delivers +2 wks)</span></label>
+            <input type="number" id="inp_rm1" min="0" placeholder="Units" onkeydown="if(event.key==='Enter')handleSubmit()">
+            <span class="input-error-msg" id="err_rm1"></span>
+          </div>
+          <div class="input-field">
+            <label class="input-label">RM2 Order <span class="input-sublabel">(1/FG, delivers +2 wks)</span></label>
+            <input type="number" id="inp_rm2" min="0" placeholder="Units" onkeydown="if(event.key==='Enter')handleSubmit()">
+            <span class="input-error-msg" id="err_rm2"></span>
+          </div>
+          <div class="input-field">
+            <label class="input-label">RM3 Order <span class="input-sublabel">(3/FG, delivers +2 wks)</span></label>
+            <input type="number" id="inp_rm3" min="0" placeholder="Units" onkeydown="if(event.key==='Enter')handleSubmit()">
+            <span class="input-error-msg" id="err_rm3"></span>
+          </div>
+        </div>
+        <button class="submit-btn" onclick="handleSubmit()">${isFinalWeek ? '🏁 Submit Final Orders' : `Submit Week ${cw} Decisions`}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTabContent() {
+  if (!G) return;
+  if (activeTab==='overview') renderOverview();
+  else if (activeTab==='mps') renderMPS();
+  else if (activeTab==='mrp') renderMRP();
+  else if (activeTab==='costs') renderCostsTab();
+}
+
+/* ═══ OVERVIEW TAB ═══ */
+function renderOverview() {
+  let html = '';
+
+  // Inventory & Service Table
+  html += `<div class="card"><div class="card-header inventory">📦 Inventory, Demand & Service Level</div><div class="table-wrap"><table><thead><tr>
+    <th>Week</th><th>FG Opening</th><th>FG Prod Order</th><th>FG Production</th><th>FG Total Inv.</th>
+    <th>Customer Orders</th><th>Shipments</th><th>FG Closing Inv.</th><th>Lost Sales</th><th>Service Level</th>
+  </tr></thead><tbody>`;
+  for (let i=0;i<=8;i++) {
+    const w=G.weeks.find(x=>x.week===i);
+    const cur=i===G.currentWeek&&!G.gameOver;
+    if (!w) {
+      // Peek: show FG Opening for the next week after last computed
+      const lastComputed = G.weeks[G.weeks.length-1].week;
+      const peek = (!G.gameOver && i===lastComputed+1) ? getNextWeekPeek(i) : null;
+      if (peek) {
+        html+=`<tr class="${cur?'current-week':''}"><td style="font-weight:700">${i}</td>
+          <td class="peek-value">${fmt(peek.fgOpening)}</td>${'<td>—</td>'.repeat(8)}</tr>`;
+      } else {
+        html+=`<tr class="future-week"><td style="font-weight:700">${i}</td>${'<td>—</td>'.repeat(9)}</tr>`;
+      }
+      continue;
+    }
+    const pm=w.fgProduction<(w.fgProdOrderEffective||w.fgProdOrder);
+    const invS=w.fgTotal<w.customerOrder;
+    const slOk=w.serviceLevel===1||w.serviceLevel===null;
+    const effNote=(w.fgProdOrderEffective!==undefined&&w.fgProdOrderEffective!==w.fgProdOrder)?` → ${fmt(w.fgProdOrderEffective)}`:'';
+    html+=`<tr class="${cur?'current-week':''}">
+      <td style="font-weight:700">${i}</td>
+      <td>${fmt(w.fgOpening)}</td>
+      <td>${fmt(w.fgProdOrder)}${effNote}</td>
+      <td class="${pm?'warning-cell':''}">${fmt(w.fgProduction)}</td>
+      <td class="${invS?'negative':''}">${fmt(w.fgTotal)}</td>
+      <td>${fmt(w.customerOrder)}</td>
+      <td>${fmt(w.shipped)}</td>
+      <td>${fmt(w.closingInv)}</td>
+      <td class="${w.lostSales>0?'negative':''}">${fmt(w.lostSales)}</td>
+      <td class="${w.serviceLevel===null?'':slOk?'service-good':'service-bad'}">${fmtPct(w.serviceLevel)}</td>
+    </tr>`;
+  }
+  html += '</tbody></table></div></div>';
+
+  // Planning Decisions Table
+  html += `<div class="card"><div class="card-header planning">📋 Forecasting & Planning Decisions</div><div class="table-wrap"><table><thead><tr>
+    <th>Week</th><th>Forecast (next wk)</th><th>Prod. Order (next wk)</th><th>RM1 Order (2/FG)</th><th>RM2 Order (1/FG)</th><th>RM3 Order (3/FG)</th>
+  </tr></thead><tbody>`;
+  for (let i=0;i<=8;i++) {
+    const w=G.weeks.find(x=>x.week===i);
+    const cur=i===G.currentWeek&&!G.gameOver;
+    if (!w) { html+=`<tr class="future-week"><td style="font-weight:700">${i}</td>${'<td>—</td>'.repeat(5)}</tr>`; continue; }
+    const fc=w.forecast!==null&&w.forecast!==undefined?fmt(w.forecast):'—';
+    const po=w.prodOrderInput!==null&&w.prodOrderInput!==undefined?fmt(w.prodOrderInput):'—';
+    const r1=w.rm1OrderInput!==null&&w.rm1OrderInput!==undefined?fmt(w.rm1OrderInput):'—';
+    const r2=w.rm2OrderInput!==null&&w.rm2OrderInput!==undefined?fmt(w.rm2OrderInput):'—';
+    const r3=w.rm3OrderInput!==null&&w.rm3OrderInput!==undefined?fmt(w.rm3OrderInput):'—';
+    html+=`<tr class="${cur?'current-week':''}">
+      <td style="font-weight:700">${i}</td>
+      <td class="highlight-lightYellow">${fc}</td>
+      <td class="highlight-yellow">${po}</td>
+      <td class="highlight-yellow">${r1}</td>
+      <td class="highlight-yellow">${r2}</td>
+      <td class="highlight-yellow">${r3}</td>
+    </tr>`;
+  }
+  html += '</tbody></table></div></div>';
+  $('tabContent').innerHTML = html;
+}
+
+/* ═══ MPS TAB ═══ */
+function renderMPS() {
+  let html = `<div class="card"><div class="card-header mps">🏭 Master Production Schedule</div><div class="table-wrap"><table><thead>
+    <tr><th rowspan="2">Wk</th><th rowspan="2">FG Opening</th><th rowspan="2">Prod Order</th>
+    <th colspan="2" style="border-bottom:1px solid var(--border)">RM1 (2/FG)</th>
+    <th colspan="2" style="border-bottom:1px solid var(--border)">RM2 (1/FG)</th>
+    <th colspan="2" style="border-bottom:1px solid var(--border)">RM3 (3/FG)</th>
+    <th rowspan="2">Production</th><th rowspan="2">FG Total</th><th rowspan="2">Orders</th><th rowspan="2">Shipped</th><th rowspan="2">Closing FG</th></tr>
+    <tr><th>Avail.</th><th>OK?</th><th>Avail.</th><th>OK?</th><th>Avail.</th><th>OK?</th></tr>
+  </thead><tbody>`;
+  for (let i=0;i<=8;i++) {
+    const w=G.weeks.find(x=>x.week===i);
+    const cur=i===G.currentWeek&&!G.gameOver;
+    if (!w) {
+      const lastComputed = G.weeks[G.weeks.length-1].week;
+      const peek = (!G.gameOver && i===lastComputed+1) ? getNextWeekPeek(i) : null;
+      if (peek) {
+        html+=`<tr class="${cur?'current-week':''}"><td style="font-weight:700">${i}</td>
+          <td class="peek-value">${fmt(peek.fgOpening)}</td>${'<td>—</td>'.repeat(12)}</tr>`;
+      } else {
+        html+=`<tr class="future-week"><td style="font-weight:700">${i}</td>${'<td>—</td>'.repeat(13)}</tr>`;
+      }
+      continue;
+    }
+    const ePO=w.fgProdOrderEffective!==undefined?w.fgProdOrderEffective:w.fgProdOrder;
+    const r1Req=ePO*BOM.rm1, r2Req=ePO*BOM.rm2, r3Req=ePO*BOM.rm3;
+    const r1Ok=ePO===0?null:w.rm1.total>=r1Req, r2Ok=ePO===0?null:w.rm2.total>=r2Req, r3Ok=ePO===0?null:w.rm3.total>=r3Req;
+    const prodS=w.fgProduction<ePO;
+    const okCell=(v)=>v===null?'<td>—</td>':v?'<td class="sufficient">✔</td>':'<td class="insufficient">✖</td>';
+    html+=`<tr class="${cur?'current-week':''}">
+      <td style="font-weight:700">${i}</td><td>${fmt(w.fgOpening)}</td><td>${fmt(ePO)}</td>
+      <td>${fmt(w.rm1.total)}</td>${okCell(r1Ok)}<td>${fmt(w.rm2.total)}</td>${okCell(r2Ok)}<td>${fmt(w.rm3.total)}</td>${okCell(r3Ok)}
+      <td class="${prodS?'warning-cell':''}">${fmt(w.fgProduction)}</td><td>${fmt(w.fgTotal)}</td>
+      <td>${fmt(w.customerOrder)}</td><td>${fmt(w.shipped)}</td><td>${fmt(w.closingInv)}</td>
+    </tr>`;
+  }
+  html += '</tbody></table></div></div>';
+  $('tabContent').innerHTML = html;
+}
+
+/* ═══ MRP TAB ═══ */
+function renderMRP() {
+  const rms = [{key:'rm1',label:'RM1',bom:2},{key:'rm2',label:'RM2',bom:1},{key:'rm3',label:'RM3',bom:3}];
+  let html = '';
+  rms.forEach(rm => {
+    html += `<div class="card"><div class="card-header mrp">📦 ${rm.label} (${rm.bom} per FG unit)</div><div class="table-wrap"><table><thead><tr>
+      <th>Wk</th><th>Opening</th><th>Receipts</th><th>Total Avail.</th><th>Required</th><th>Max FG</th>
+      <th>FG Prod Order</th><th>FG Produced</th><th>${rm.label} Used</th><th>${rm.label} Closing</th>
+    </tr></thead><tbody>`;
+    for (let i=0;i<=8;i++) {
+      const w=G.weeks.find(x=>x.week===i);
+      const cur=i===G.currentWeek&&!G.gameOver;
+      if (!w) {
+        const lastComputed = G.weeks[G.weeks.length-1].week;
+        const peek = (!G.gameOver && i===lastComputed+1) ? getNextWeekPeek(i) : null;
+        if (peek) {
+          const pO = peek[rm.key+'Opening'], pR = peek[rm.key+'Receipt'];
+          html+=`<tr class="${cur?'current-week':''}"><td style="font-weight:700">${i}</td>
+            <td class="peek-value">${fmt(pO)}</td><td class="peek-value">${fmt(pR)}</td>
+            <td class="peek-value">${fmt(pO+pR)}</td>${'<td>—</td>'.repeat(6)}</tr>`;
+        } else {
+          html+=`<tr class="future-week"><td style="font-weight:700">${i}</td>${'<td>—</td>'.repeat(9)}</tr>`;
+        }
+        continue;
+      }
+      const d=w[rm.key];
+      const ePO=w.fgProdOrderEffective!==undefined?w.fgProdOrderEffective:w.fgProdOrder;
+      const insuf=d.total<d.required;
+      const clsNeg=d.closing<0;
+      html+=`<tr class="${cur?'current-week':''}">
+        <td style="font-weight:700">${i}</td><td>${fmt(d.opening)}</td><td>${fmt(d.receipt)}</td>
+        <td>${fmt(d.total)}</td><td class="${insuf?'negative':''}">${fmt(d.required)}</td><td>${fmt(d.maxFG)}</td>
+        <td>${fmt(ePO)}</td><td class="${w.fgProduction<ePO?'warning-cell':''}">${fmt(w.fgProduction)}</td>
+        <td>${fmt(d.used)}</td><td class="${clsNeg?'negative':d.closing===0?'warning-cell':''}">${fmt(d.closing)}</td>
+      </tr>`;
+    }
+    html += '</tbody></table></div></div>';
+  });
+  $('tabContent').innerHTML = html;
+}
+
+/* ═══ COSTS TAB ═══ */
+function renderCostsTab() {
+  const costs = computeAllCosts();
+  const totalRM=costs.reduce((s,c)=>s+c.rmInventory,0);
+  const totalFG=costs.reduce((s,c)=>s+c.fgInventory,0);
+  const totalSF=costs.reduce((s,c)=>s+c.serviceFailure,0);
+  const totalAll=totalRM+totalFG+totalSF;
+
+  let html = `<div class="summary-grid">
+    <div class="summary-card"><div class="summary-card-label">RM Inventory Cost</div><div class="summary-card-value">${fmtCurrency(totalRM)}</div></div>
+    <div class="summary-card"><div class="summary-card-label">FG Inventory Cost</div><div class="summary-card-value">${fmtCurrency(totalFG)}</div></div>
+    <div class="summary-card"><div class="summary-card-label">Service Failure Cost</div><div class="summary-card-value">${fmtCurrency(totalSF)}</div></div>
+    <div class="summary-card total-card"><div class="summary-card-label">Total SC Cost</div><div class="summary-card-value">${fmtCurrency(totalAll)}</div></div>
+  </div>`;
+
+  html += `<div class="card"><div class="card-header costs">📊 Supply Chain Costs Over Time</div><div class="chart-container"><canvas id="costCanvas"></canvas></div></div>`;
+
+  html += `<div class="card"><div class="card-header costs">📋 Cost Breakdown by Week</div><div class="table-wrap"><table><thead><tr>
+    <th>Week</th><th>RM Inventory (£0.50/unit)</th><th>FG Inventory (£10/unit)</th><th>Service Failure (£20/unit)</th><th>Week Total</th>
+  </tr></thead><tbody>`;
+  costs.forEach(c => {
+    html+=`<tr><td style="font-weight:700">${c.week}</td><td>${fmtCurrency(c.rmInventory)}</td><td>${fmtCurrency(c.fgInventory)}</td>
+      <td class="${c.serviceFailure>0?'negative':''}">${fmtCurrency(c.serviceFailure)}</td><td style="font-weight:700">${fmtCurrency(c.total)}</td></tr>`;
+  });
+  html+=`<tr style="background:var(--surface-alt);font-weight:700">
+    <td>Total</td><td>${fmtCurrency(totalRM)}</td><td>${fmtCurrency(totalFG)}</td>
+    <td class="${totalSF>0?'negative':''}">${fmtCurrency(totalSF)}</td>
+    <td style="color:var(--brand-red);font-size:15px">${fmtCurrency(totalAll)}</td>
+  </tr>`;
+  html += '</tbody></table></div></div>';
+  $('tabContent').innerHTML = html;
+
+  // Render chart
+  setTimeout(() => renderCostChart(costs), 50);
+}
+
+function renderCostChart(costs) {
+  const canvas = $('costCanvas');
+  if (!canvas) return;
+  if (costChart) { costChart.destroy(); costChart=null; }
+  const labels = costs.map(c=>'Week '+c.week);
+  costChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'RM Inventory', data:costs.map(c=>c.rmInventory), backgroundColor:'rgba(133,193,233,0.8)', borderColor:'#2471A3', borderWidth:1 },
+        { label:'FG Inventory', data:costs.map(c=>c.fgInventory), backgroundColor:'rgba(130,224,170,0.8)', borderColor:'#2D8A4E', borderWidth:1 },
+        { label:'Service Failure', data:costs.map(c=>c.serviceFailure), backgroundColor:'rgba(241,148,138,0.8)', borderColor:'#C0392B', borderWidth:1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { stacked:true, grid:{display:false} },
+        y: { stacked:true, ticks:{ callback:v=>'£'+v.toLocaleString() }, grid:{color:'#F0E6D2'} }
+      },
+      plugins: {
+        legend: { position:'top', labels:{ font:{family:"'DM Sans',sans-serif", size:12} } },
+        tooltip: { callbacks:{ label: ctx => ctx.dataset.label+': £'+ctx.raw.toLocaleString() } }
+      }
+    }
+  });
+}
+
+/* ═══ GAME OVER ═══ */
+function showGameOver() {
+  const costs=computeAllCosts();
+  const totalRM=costs.reduce((s,c)=>s+c.rmInventory,0);
+  const totalFG=costs.reduce((s,c)=>s+c.fgInventory,0);
+  const totalSF=costs.reduce((s,c)=>s+c.serviceFailure,0);
+  const totalAll=totalRM+totalFG+totalSF;
+  const totalShipped=G.weeks.reduce((s,w)=>s+w.shipped,0);
+  const totalOrdered=G.weeks.reduce((s,w)=>s+w.customerOrder,0);
+  const aggSL=totalOrdered>0?totalShipped/totalOrdered:0;
+  const modeNames={PR:'Practice Round',R1:'Round 1',R2:'Round 2'};
+
+  $('gameOverTitle').textContent=modeNames[G.mode]+' Complete!';
+  $('gameOverTotal').textContent=fmtCurrency(totalAll);
+  $('goRM').textContent=fmtCurrency(totalRM);
+  $('goFG').textContent=fmtCurrency(totalFG);
+  $('goSF').textContent=fmtCurrency(totalSF);
+  $('goService').innerHTML=`Aggregate Service Level: <strong style="color:${aggSL>=0.95?'var(--success)':'var(--danger)'}">${fmtPct(aggSL)}</strong>`;
+  $('gameOverOverlay').classList.remove('hidden');
+}
+
+function goHome() {
+  $('gameOverOverlay').classList.add('hidden');
+  $('gameScreen').classList.add('hidden');
+  $('startScreen').classList.remove('hidden');
+  if (costChart) { costChart.destroy(); costChart=null; }
+  G=null;
+}
+
+function restartGame() {
+  $('gameOverOverlay').classList.add('hidden');
+  startGame(G.mode);
+}
+
+/* ═══ CONFIRM DIALOG ═══ */
+let confirmAction = null;
+function confirmHome() {
+  $('confirmTitle').textContent='Return to Home?';
+  $('confirmMessage').textContent='Your current game progress will be lost. Continue?';
+  confirmAction = goHome;
+  $('confirmBtn').onclick = () => { closeConfirm(); confirmAction(); };
+  $('confirmOverlay').classList.remove('hidden');
+}
+function confirmRestart() {
+  $('confirmTitle').textContent='Restart Game?';
+  $('confirmMessage').textContent='This will reset all your progress. Are you sure?';
+  confirmAction = () => startGame(G.mode);
+  $('confirmBtn').onclick = () => { closeConfirm(); confirmAction(); };
+  $('confirmOverlay').classList.remove('hidden');
+}
+function closeConfirm() { $('confirmOverlay').classList.add('hidden'); }
+</script>
+</body>
+</html>

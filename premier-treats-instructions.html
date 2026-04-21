@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premier Treats — How to Play</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand-red: #C41E3A;
+  --brand-red-dark: #8B1428;
+  --brand-gold: #D4A843;
+  --brand-cream: #FFF8E7;
+  --brand-brown: #5C3D2E;
+  --surface: #FFFDF5;
+  --surface-alt: #FEF7E6;
+  --text: #2D1B0E;
+  --text-muted: #8B7355;
+  --border: #E8D5B8;
+  --success: #2D8A4E;
+  --warning: #E67E22;
+  --danger: #C0392B;
+  --info: #2471A3;
+  --shadow-md: 0 4px 12px rgba(92,61,46,0.1);
+  --shadow-lg: 0 8px 32px rgba(92,61,46,0.12);
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.7;
+}
+h1,h2,h3,h4 { font-family: 'Fredoka', sans-serif; }
+
+.header {
+  background: linear-gradient(135deg, #FFF8E7 0%, #FEF0D0 50%, #FFF5E1 100%);
+  text-align: center;
+  padding: 48px 24px 40px;
+  border-bottom: 2px solid var(--border);
+}
+.header-brand { font-family: 'Fredoka', sans-serif; font-size: 2rem; color: var(--brand-red); font-weight: 700; }
+.header-sub { font-family: 'Fredoka', sans-serif; font-size: 1.2rem; color: var(--brand-gold); font-weight: 500; }
+.header-icons { font-size: 1.6rem; margin: 8px 0; letter-spacing: 6px; }
+.header h1 { font-size: 1.5rem; color: var(--brand-brown); margin-top: 12px; }
+
+.container { max-width: 780px; margin: 0 auto; padding: 32px 24px 64px; }
+
+section { margin-bottom: 40px; }
+section h2 { font-size: 1.25rem; color: var(--brand-red); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+section h3 { font-size: 1.05rem; color: var(--brand-brown); margin: 16px 0 8px; }
+p { margin-bottom: 12px; color: var(--text); }
+p.muted { color: var(--text-muted); font-size: 0.92rem; }
+
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-md);
+}
+.card-accent { border-left: 4px solid var(--brand-gold); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 16px;
+  font-size: 0.9rem;
+}
+th { background: var(--surface-alt); text-align: left; padding: 10px 14px; font-weight: 600; border-bottom: 2px solid var(--border); }
+td { padding: 8px 14px; border-bottom: 1px solid var(--border); }
+td:last-child, th:last-child { text-align: right; }
+
+.tag { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 0.78rem; font-weight: 600; }
+.tag-easy { background: #E8F5E9; color: var(--success); }
+.tag-medium { background: #FFF3E0; color: var(--warning); }
+.tag-hard { background: #FDEDEC; color: var(--danger); }
+
+.tip {
+  background: #EBF5FB;
+  border-left: 4px solid var(--info);
+  padding: 14px 18px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin: 16px 0;
+  font-size: 0.92rem;
+}
+.tip strong { color: var(--info); }
+
+.warning {
+  background: #FFF3E0;
+  border-left: 4px solid var(--warning);
+  padding: 14px 18px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin: 16px 0;
+  font-size: 0.92rem;
+}
+.warning strong { color: var(--warning); }
+
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.flow-step {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.flow-arrow { color: var(--brand-gold); font-size: 1.2rem; font-weight: 700; }
+
+.back-link {
+  display: inline-block;
+  margin-top: 24px;
+  padding: 12px 28px;
+  background: var(--brand-red);
+  color: #fff;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-family: 'Fredoka', sans-serif;
+  transition: background 0.2s;
+}
+.back-link:hover { background: var(--brand-red-dark); }
+
+@media (max-width: 600px) {
+  .header { padding: 32px 16px 28px; }
+  .header-brand { font-size: 1.6rem; }
+  .header h1 { font-size: 1.2rem; }
+  .container { padding: 24px 16px 48px; }
+  .flow { flex-direction: column; align-items: flex-start; }
+  .flow-arrow { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">Premier</div>
+  <div class="header-sub">Treats</div>
+  <div class="header-icons">🍪 🍩 🍬 🍫 🧁</div>
+  <h1>How to Play</h1>
+</div>
+
+<div class="container">
+
+<!-- OVERVIEW -->
+<section>
+  <h2>🎯 Objective</h2>
+  <p>You are the supply chain planner at <strong>Premier Treats</strong>, a confectionery manufacturer. Your job is to decide how much to produce and how many raw materials to order each week — balancing service levels against inventory costs.</p>
+  <p>The simulation runs for <strong>9 weeks</strong> (Week 0–8). Week 0 is pre-filled to show you the starting position. From Week 1 onward, you make the decisions.</p>
+  <p>Your goal: <strong>minimise total supply chain cost</strong> while keeping customer service levels as high as possible.</p>
+</section>
+
+<!-- GAME FLOW -->
+<section>
+  <h2>🔄 Weekly Flow</h2>
+  <p>Each week follows a reveal sequence before you enter your decisions:</p>
+  <div class="flow">
+    <div class="flow-step">📦 Customer Order revealed</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">📊 Service Level shown</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">🔮 Next-week Forecast revealed</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">✏️ You enter decisions</div>
+  </div>
+  <p class="muted">Watch the reveal cards carefully — the customer order and forecast give you information to plan your next move.</p>
+</section>
+
+<!-- DECISIONS -->
+<section>
+  <h2>✏️ Your Decisions</h2>
+  <p>Each week you enter <strong>four values</strong>:</p>
+  <div class="card card-accent">
+    <table>
+      <tr><th>Input</th><th>What it means</th></tr>
+      <tr><td><strong>Production Order</strong></td><td>How many finished goods (FG) units to produce this week. Maximum capacity is 1,200 units. Production is constrained by available raw materials.</td></tr>
+      <tr><td><strong>RM1 Order</strong></td><td>Raw Material 1 to order — arrives in 2 weeks.</td></tr>
+      <tr><td><strong>RM2 Order</strong></td><td>Raw Material 2 to order — arrives in 2 weeks.</td></tr>
+      <tr><td><strong>RM3 Order</strong></td><td>Raw Material 3 to order — arrives in 2 weeks.</td></tr>
+    </table>
+  </div>
+  <div class="tip"><strong>💡 Tip:</strong> Leaving a field empty is treated as zero. You can enter 0 deliberately if you don't need to order.</div>
+</section>
+
+<!-- BOM -->
+<section>
+  <h2>📦 Bill of Materials</h2>
+  <p>Each finished good requires these raw materials to produce:</p>
+  <div class="card">
+    <table>
+      <tr><th>Material</th><th>Units per FG</th></tr>
+      <tr><td>RM1</td><td>2</td></tr>
+      <tr><td>RM2</td><td>1</td></tr>
+      <tr><td>RM3</td><td>3</td></tr>
+    </table>
+  </div>
+  <p>For example, to produce 500 finished goods you need 1,000 RM1, 500 RM2, and 1,500 RM3. If any material runs short, production is capped at whatever the limiting material allows.</p>
+</section>
+
+<!-- LEAD TIMES -->
+<section>
+  <h2>⏱️ Lead Times</h2>
+  <p>All raw material orders take <strong>2 weeks to arrive</strong>. An order placed in Week 2 arrives at the start of Week 4.</p>
+  <div class="warning"><strong>⚠️ Important:</strong> Plan ahead! You cannot get materials faster, so anticipate demand using the forecast.</div>
+</section>
+
+<!-- COSTS -->
+<section>
+  <h2>💰 Cost Structure</h2>
+  <p>Your total supply chain cost is the sum of three components each week:</p>
+  <div class="card card-accent">
+    <table>
+      <tr><th>Cost Type</th><th>Rate</th></tr>
+      <tr><td><strong>RM Inventory Holding</strong></td><td>£0.50 per unit of RM closing stock</td></tr>
+      <tr><td><strong>FG Inventory Holding</strong></td><td>£10 per unit of FG closing stock</td></tr>
+      <tr><td><strong>Service Failure</strong></td><td>£20 per unit of lost sales</td></tr>
+    </table>
+  </div>
+  <p>Lost sales occur when customer demand exceeds your available finished goods. Service failure cost is the most expensive — but holding excess inventory isn't free either. The challenge is finding the right balance.</p>
+</section>
+
+<!-- TABS -->
+<section>
+  <h2>📊 Dashboard Tabs</h2>
+  <p>During the game, four tabs show different views of your supply chain:</p>
+  <div class="card">
+    <h3>📊 Overview</h3>
+    <p class="muted">Week-by-week summary of production, demand, inventory, and service levels. Your primary planning view.</p>
+    <h3>🏭 MPS (Master Production Schedule)</h3>
+    <p class="muted">Detailed finished goods view — opening stock, production, total available, customer orders, shipments, closing inventory, and lost sales.</p>
+    <h3>📦 MRP (Material Requirements Planning)</h3>
+    <p class="muted">Raw material detail for RM1, RM2, and RM3 — opening stock, receipts, totals, usage, and closing balances. Shows the maximum FG each material can support.</p>
+    <h3>💰 Costs</h3>
+    <p class="muted">Running cost breakdown — RM holding, FG holding, and service failure costs per week, with cumulative totals and a chart.</p>
+  </div>
+</section>
+
+<!-- ROUNDS -->
+<section>
+  <h2>🎮 Game Rounds</h2>
+  <div class="card" style="margin-bottom:12px;">
+    <h3>Practice Round <span class="tag tag-easy">Easy</span></h3>
+    <p class="muted">Learn the mechanics with stable demand and no disruptions. Use this to understand how production, materials, and costs interact.</p>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <h3>Round 1 <span class="tag tag-medium">Medium</span></h3>
+    <p class="muted">Same mechanics, but a supply chain disruption may affect your raw material deliveries. Stay alert to supplier notifications.</p>
+  </div>
+  <div class="card">
+    <h3>Round 2 <span class="tag tag-hard">Hard</span></h3>
+    <p class="muted">Multiple disruptions test your planning resilience — both supplier delays and factory capacity constraints. Can you adapt?</p>
+  </div>
+  <div class="warning"><strong>⚠️ Disruptions:</strong> When a disruption occurs, a notification banner appears. Read it carefully — it tells you exactly what has changed (e.g., a delayed shipment or reduced capacity). You cannot undo orders already placed.</div>
+</section>
+
+<!-- STARTING POSITION -->
+<section>
+  <h2>📋 Starting Position (Week 0)</h2>
+  <p>Every round begins with the same initial state:</p>
+  <div class="card card-accent">
+    <table>
+      <tr><th>Item</th><th>Value</th></tr>
+      <tr><td>FG Opening Inventory</td><td>400 units</td></tr>
+      <tr><td>FG Production (Week 0)</td><td>500 units</td></tr>
+      <tr><td>RM1 Opening + Receipt</td><td>500 + 500 = 1,000</td></tr>
+      <tr><td>RM2 Opening + Receipt</td><td>250 + 250 = 500</td></tr>
+      <tr><td>RM3 Opening + Receipt</td><td>750 + 750 = 1,500</td></tr>
+      <tr><td>Week 1 RM Receipts (pre-ordered)</td><td>RM1: 4,000 · RM2: 1,200 · RM3: 4,200</td></tr>
+      <tr><td>Max Production Capacity</td><td>1,200 units / week</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- TIPS -->
+<section>
+  <h2>🏆 Strategy Tips</h2>
+  <div class="tip"><strong>💡 Use the forecast:</strong> The forecast for next week is revealed each round. It won't be perfect, but it's your best planning signal.</div>
+  <div class="tip"><strong>💡 Watch the BOM constraint:</strong> RM3 is the tightest material (3 units per FG). Running out of RM3 is the most common bottleneck.</div>
+  <div class="tip"><strong>💡 Balance inventory vs. service:</strong> Lost sales cost £20/unit while FG holding is £10/unit. A small safety stock is cheaper than missing orders.</div>
+  <div class="tip"><strong>💡 Order RM early:</strong> The 2-week lead time means you're always ordering for two weeks ahead. Don't wait until stock runs low.</div>
+</section>
+
+<div style="text-align:center;">
+  <a href="premier-treats.html" class="back-link">🎮 Start Playing</a>
+</div>
+
+</div>
+</body>
+</html>
