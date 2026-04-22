@@ -844,6 +844,29 @@ body {
   border-top: 1px dashed var(--rule);
 }
 
+/* ── Growth steps stage badges ── */
+.gs-stage-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.gs-stage-2 { background: #fff5e6; color: #b47400; }   /* Root (was Growth amber) */
+.gs-stage-3 { background: #e8f0fa; color: #1d4e8f; }   /* Branch (was Maturity blue) */
+.gs-stage-4 { background: #e2f4e4; color: #1f6f2a; }   /* Evergreen */
+
+.gs-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+}
+@media (max-width: 700px) { .gs-fields-grid { grid-template-columns: 1fr; } }
+
 /* ── Back button on file-manager header ── */
 .btn-back {
   background: transparent;
@@ -938,11 +961,10 @@ body {
         <div class="tile-title">Assessment Questions</div>
         <div class="tile-sub">Edit questions and evidence criteria</div>
       </a>
-      <a class="menu-tile" data-action="growth" data-disabled="1">
+      <a class="menu-tile" data-action="growth">
         <div class="tile-icon">&#x1F331;</div>
         <div class="tile-title">Growth Steps</div>
         <div class="tile-sub">Edit growth steps</div>
-        <div class="tile-badge">Coming soon</div>
       </a>
       <a class="menu-tile" data-action="files">
         <div class="tile-icon">&#x1F4C1;</div>
@@ -1012,6 +1034,39 @@ body {
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ═══ GROWTH STEPS EDITOR SCREEN ═══ -->
+<div class="screen" id="screen-growth-steps">
+  <div class="header">
+    <div class="header-left">
+      <button class="btn-back" id="btn-back-home-growth" title="Back to Admin Home">&#8592; Admin Home</button>
+      <div class="header-logo">Ringularity <span>Growth Steps</span></div>
+    </div>
+    <div class="header-right">
+      <div class="header-email" id="growth-header-email"></div>
+      <button class="btn-signout" id="btn-signout-growth">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="section-wrap">
+    <div class="panel-head">
+      <h2>Growth Steps</h2>
+      <p class="panel-sub">Edit the 75 growth steps (25 subtopics &times; 3 target stages: Root, Branch, Evergreen). Each step guides a user moving into that stage for that subtopic.</p>
+    </div>
+    <div class="add-row" style="gap:20px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--muted)">Filter by stage:
+        <select id="growth-filter-stage" class="text-input" style="flex:0 0 auto;min-width:140px">
+          <option value="">All stages</option>
+          <option value="2">2 &ndash; Root</option>
+          <option value="3">3 &ndash; Branch</option>
+          <option value="4">4 &ndash; Evergreen</option>
+        </select>
+      </label>
+    </div>
+    <div id="growth-status" class="status-msg"></div>
+    <div id="growth-list" class="questions-list"></div>
   </div>
 </div>
 
@@ -1543,6 +1598,148 @@ function toggleConsultantLink(clientId, userId, checked, cbEl) {
   }).catch(function(e) {
     setClientsStatus((checked ? 'Assignment failed: ' : 'Unassignment failed: ') + (e.message || e), 'error');
     cbEl.checked = !checked;
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// GROWTH STEPS EDITOR
+// ════════════════════════════════════════════════════════════════════
+var _growthSteps = [];
+var _gsStageNames = { 2: 'Root', 3: 'Branch', 4: 'Evergreen' };
+var _gsFields = [
+  { key: 'title',         label: 'Title',          rows: 2 },
+  { key: 'inputs',        label: 'Inputs',         rows: 3 },
+  { key: 'process_steps', label: 'Process steps',  rows: 4 },
+  { key: 'outputs',       label: 'Outputs',        rows: 3 },
+  { key: 'tools',         label: 'Tools',          rows: 3 },
+  { key: 'kpis',          label: 'KPIs',           rows: 3 },
+  { key: 'audience',      label: 'Audience',       rows: 2 },
+  { key: 'time_required', label: 'Time required',  rows: 2 },
+  { key: 'resources',     label: 'Resources',      rows: 2 }
+];
+
+function openGrowthStepsAdmin() {
+  var email = (_currentUser && _currentUser.email) || '';
+  document.getElementById('growth-header-email').textContent = email;
+  showScreen('screen-growth-steps');
+  setGrowthStatus('Loading\u2026', '');
+  loadAdminGrowthSteps().then(function() {
+    renderAdminGrowthSteps();
+    setGrowthStatus('', '');
+  }).catch(function(e) {
+    setGrowthStatus('Could not load growth steps: ' + (e.message || e), 'error');
+  });
+}
+
+function setGrowthStatus(msg, type) {
+  var el = document.getElementById('growth-status');
+  el.textContent = msg || '';
+  el.className = 'status-msg' + (type ? ' ' + type : '');
+}
+
+function loadAdminGrowthSteps() {
+  var cols = 'id, sort_order, system, subtopic, target_stage, ' + _gsFields.map(function(f) { return f.key; }).join(', ');
+  return sbClient()
+    .from('growth_steps')
+    .select(cols)
+    .order('sort_order', { ascending: true })
+    .then(function(res) {
+      if (res.error) throw res.error;
+      _growthSteps = res.data || [];
+    });
+}
+
+function renderAdminGrowthSteps() {
+  var container = document.getElementById('growth-list');
+  var filter = parseInt(document.getElementById('growth-filter-stage').value || '0', 10) || 0;
+  var rows = filter ? _growthSteps.filter(function(r) { return r.target_stage === filter; }) : _growthSteps;
+  if (rows.length === 0) {
+    container.innerHTML = '<div class="empty-state"><h3>No growth steps in view</h3><p>Try a different filter.</p></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < rows.length; i++) {
+    var g = rows[i];
+    var stageName = _gsStageNames[g.target_stage] || ('Stage ' + g.target_stage);
+    html += '<div class="question-card" data-id="' + escAttr(g.id) + '">'
+          +   '<div class="q-head" data-role="toggle">'
+          +     '<div style="display:flex;align-items:center">'
+          +       '<span class="q-num-badge">' + g.sort_order + '</span>'
+          +       '<div>'
+          +         '<div class="q-system">' + esc(g.system) + '</div>'
+          +         '<div class="q-subtopic">' + esc(g.subtopic)
+          +           '<span class="gs-stage-badge gs-stage-' + g.target_stage + '">&rarr; ' + g.target_stage + ' &ndash; ' + esc(stageName) + '</span>'
+          +         '</div>'
+          +       '</div>'
+          +     '</div>'
+          +     '<button class="btn-sm" data-role="toggle-btn">Edit</button>'
+          +   '</div>'
+          +   '<div class="q-body">'
+          +     '<div class="gs-fields-grid">';
+    for (var f = 0; f < _gsFields.length; f++) {
+      var fld = _gsFields[f];
+      html += '<div' + (fld.key === 'process_steps' || fld.key === 'title' ? ' style="grid-column:1 / -1"' : '') + '>'
+            +   '<label>' + esc(fld.label) + '</label>'
+            +   '<textarea data-field="' + fld.key + '" rows="' + fld.rows + '">' + esc(g[fld.key] || '') + '</textarea>'
+            + '</div>';
+    }
+    html +=     '</div>'
+          +     '<div class="q-actions">'
+          +       '<button class="btn-sm" data-role="cancel">Cancel</button>'
+          +       '<button class="btn btn-primary" data-role="save">Save Changes</button>'
+          +     '</div>'
+          +   '</div>'
+          + '</div>';
+  }
+  container.innerHTML = html;
+
+  container.querySelectorAll('.question-card').forEach(function(card) {
+    var head = card.querySelector('.q-head');
+    head.addEventListener('click', function(e) {
+      if (e.target.getAttribute('data-role') !== 'toggle-btn') toggleGrowthCard(card);
+    });
+    card.querySelector('[data-role="toggle-btn"]').addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleGrowthCard(card);
+    });
+    card.querySelector('[data-role="cancel"]').addEventListener('click', function() {
+      collapseGrowthCard(card);
+      renderAdminGrowthSteps();
+    });
+    card.querySelector('[data-role="save"]').addEventListener('click', function() { saveGrowthStep(card); });
+  });
+}
+
+function toggleGrowthCard(card) {
+  if (card.classList.contains('open')) collapseGrowthCard(card);
+  else card.classList.add('open');
+}
+function collapseGrowthCard(card) { card.classList.remove('open'); }
+
+function saveGrowthStep(card) {
+  var id = card.getAttribute('data-id');
+  var patch = {};
+  for (var f = 0; f < _gsFields.length; f++) {
+    var fld = _gsFields[f];
+    var val = card.querySelector('textarea[data-field="' + fld.key + '"]').value;
+    if (fld.key === 'title') val = val.trim();
+    patch[fld.key] = val;
+  }
+  if (!patch.title) { setGrowthStatus('Title cannot be empty.', 'error'); return; }
+
+  setGrowthStatus('Saving\u2026', '');
+  sbClient().from('growth_steps').update(patch).eq('id', id).then(function(res) {
+    if (res.error) throw res.error;
+    for (var i = 0; i < _growthSteps.length; i++) {
+      if (String(_growthSteps[i].id) === String(id)) {
+        for (var k in patch) if (patch.hasOwnProperty(k)) _growthSteps[i][k] = patch[k];
+      }
+    }
+    setGrowthStatus('Saved.', 'success');
+    setTimeout(function() { setGrowthStatus('', ''); }, 2000);
+    collapseGrowthCard(card);
+  }).catch(function(e) {
+    setGrowthStatus('Save failed: ' + (e.message || e), 'error');
   });
 }
 
@@ -2361,16 +2558,19 @@ document.getElementById('btn-signout-home').addEventListener('click', doSignOut)
 document.getElementById('btn-signout-clients').addEventListener('click', doSignOut);
 document.getElementById('btn-signout-users').addEventListener('click', doSignOut);
 document.getElementById('btn-signout-questions').addEventListener('click', doSignOut);
+document.getElementById('btn-signout-growth').addEventListener('click', doSignOut);
 document.getElementById('btn-denied-signout').addEventListener('click', doSignOut);
 document.getElementById('btn-back-home').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-back-home-clients').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-back-home-users').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-back-home-questions').addEventListener('click', function() { showScreen('screen-home'); });
+document.getElementById('btn-back-home-growth').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-add-client').addEventListener('click', addClient);
 document.getElementById('new-client-name').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') addClient();
 });
 document.getElementById('btn-invite-user').addEventListener('click', inviteUser);
+document.getElementById('growth-filter-stage').addEventListener('change', function() { renderAdminGrowthSteps(); });
 
 // Admin-home menu tile routing
 document.querySelectorAll('#screen-home .menu-tile').forEach(function(tile) {
@@ -2381,6 +2581,7 @@ document.querySelectorAll('#screen-home .menu-tile').forEach(function(tile) {
     else if (action === 'clients')   openClientsAdmin();
     else if (action === 'users')     openUsersAdmin();
     else if (action === 'questions') openQuestionsAdmin();
+    else if (action === 'growth')    openGrowthStepsAdmin();
   });
 });
 
