@@ -671,6 +671,75 @@ body {
   font-family: inherit;
 }
 
+/* ── Users admin: invite form ── */
+.invite-form {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--card-shadow);
+}
+.invite-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 16px;
+  margin-bottom: 14px;
+}
+.invite-grid label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  gap: 4px;
+}
+.invite-grid label input,
+.invite-grid label select {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+.role-select {
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  background: #fff;
+  color: var(--ink);
+  margin-right: 6px;
+}
+.role-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.role-badge.admin      { background: #fdecea; color: var(--danger); }
+.role-badge.consultant { background: #eef3fb; color: #2b5a8f; }
+.role-badge.client     { background: var(--paper); color: var(--muted); }
+.user-meta { font-size: 0.82rem; color: var(--muted); margin-top: 2px; word-break: break-all; }
+.self-marker {
+  font-size: 0.7rem;
+  background: var(--accent2);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-weight: 600;
+}
+
 /* ── Back button on file-manager header ── */
 .btn-back {
   background: transparent;
@@ -750,11 +819,10 @@ body {
     <p class="home-sub">Choose an area to manage.</p>
 
     <div class="menu-grid">
-      <a class="menu-tile" data-action="users" data-disabled="1">
+      <a class="menu-tile" data-action="users">
         <div class="tile-icon">&#x1F465;</div>
         <div class="tile-title">Users</div>
         <div class="tile-sub">Setup &amp; administer users</div>
-        <div class="tile-badge">Coming soon</div>
       </a>
       <a class="menu-tile" data-action="clients">
         <div class="tile-icon">&#x1F3E2;</div>
@@ -841,6 +909,46 @@ body {
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ═══ USERS ADMIN SCREEN ═══ -->
+<div class="screen" id="screen-users">
+  <div class="header">
+    <div class="header-left">
+      <button class="btn-back" id="btn-back-home-users" title="Back to Admin Home">&#8592; Admin Home</button>
+      <div class="header-logo">Ringularity <span>Users</span></div>
+    </div>
+    <div class="header-right">
+      <div class="header-email" id="users-header-email"></div>
+      <button class="btn-signout" id="btn-signout-users">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="section-wrap">
+    <div class="panel-head">
+      <h2>Users</h2>
+      <p class="panel-sub">Invite new users, change roles, reset passwords, or remove accounts. Passwords are set directly for test purposes.</p>
+    </div>
+
+    <div class="invite-form">
+      <div class="invite-grid">
+        <label>Email<input type="email" id="inv-email" class="text-input" placeholder="person@example.com" autocomplete="off"/></label>
+        <label>Display name<input type="text" id="inv-name" class="text-input" placeholder="Full name" autocomplete="off"/></label>
+        <label>Password (min 8 chars)<input type="text" id="inv-password" class="text-input" placeholder="Temporary password" autocomplete="new-password"/></label>
+        <label>Role
+          <select id="inv-role" class="text-input">
+            <option value="client">client</option>
+            <option value="consultant">consultant</option>
+            <option value="admin">admin</option>
+          </select>
+        </label>
+      </div>
+      <button class="btn btn-primary" id="btn-invite-user">+ Add User</button>
+    </div>
+
+    <div id="users-status" class="status-msg"></div>
+    <div id="users-list" class="clients-list"></div>
   </div>
 </div>
 
@@ -1309,6 +1417,172 @@ function toggleConsultantLink(clientId, userId, checked, cbEl) {
   }).catch(function(e) {
     setClientsStatus((checked ? 'Assignment failed: ' : 'Unassignment failed: ') + (e.message || e), 'error');
     cbEl.checked = !checked;
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// USERS ADMIN
+// ════════════════════════════════════════════════════════════════════
+var _users = []; // [{id, email, display_name, role}]
+
+function openUsersAdmin() {
+  var email = (_currentUser && _currentUser.email) || '';
+  document.getElementById('users-header-email').textContent = email;
+  showScreen('screen-users');
+  setUsersStatus('Loading\u2026', '');
+  loadUsers().then(function() {
+    renderUsers();
+    setUsersStatus('', '');
+  }).catch(function(e) {
+    setUsersStatus('Could not load users: ' + (e.message || e), 'error');
+  });
+}
+
+function setUsersStatus(msg, type) {
+  var el = document.getElementById('users-status');
+  el.textContent = msg || '';
+  el.className = 'status-msg' + (type ? ' ' + type : '');
+}
+
+function loadUsers() {
+  return sbClient()
+    .from('profiles')
+    .select('id, email, display_name, role')
+    .order('role').order('display_name')
+    .then(function(res) {
+      if (res.error) throw res.error;
+      _users = res.data || [];
+    });
+}
+
+function renderUsers() {
+  var container = document.getElementById('users-list');
+  if (_users.length === 0) {
+    container.innerHTML = '<div class="empty-state"><h3>No users yet</h3><p>Invite one above.</p></div>';
+    return;
+  }
+  var selfId = currentUserId();
+  var html = '';
+  for (var i = 0; i < _users.length; i++) {
+    var u = _users[i];
+    var isSelf = (u.id === selfId);
+    html += '<div class="client-card" data-id="' + escAttr(u.id) + '">'
+          +   '<div class="client-card-head">'
+          +     '<div>'
+          +       '<div class="client-card-name">' + esc(u.display_name || u.email || '(no name)')
+          +         '<span class="role-badge ' + escAttr(u.role) + '">' + esc(u.role) + '</span>'
+          +         (isSelf ? '<span class="self-marker">YOU</span>' : '')
+          +       '</div>'
+          +       '<div class="user-meta">' + esc(u.email || u.id) + '</div>'
+          +     '</div>'
+          +     '<div class="client-card-actions">'
+          +       'Role: <select class="role-select" data-action="role" data-id="' + escAttr(u.id) + '"' + (isSelf ? ' disabled title="You cannot change your own role"' : '') + '>'
+          +         '<option value="client"'     + (u.role === 'client' ? ' selected' : '')     + '>client</option>'
+          +         '<option value="consultant"' + (u.role === 'consultant' ? ' selected' : '') + '>consultant</option>'
+          +         '<option value="admin"'      + (u.role === 'admin' ? ' selected' : '')      + '>admin</option>'
+          +       '</select>'
+          +       '<button class="btn-sm" data-action="password" data-id="' + escAttr(u.id) + '" data-name="' + escAttr(u.display_name || u.email) + '">Set Password</button>'
+          +       '<button class="btn-sm danger" data-action="delete" data-id="' + escAttr(u.id) + '" data-name="' + escAttr(u.display_name || u.email) + '"' + (isSelf ? ' disabled title="You cannot delete yourself"' : '') + '>Delete</button>'
+          +     '</div>'
+          +   '</div>'
+          + '</div>';
+  }
+  container.innerHTML = html;
+
+  container.querySelectorAll('select[data-action="role"]').forEach(function(sel) {
+    sel.addEventListener('change', function() {
+      changeUserRole(sel.getAttribute('data-id'), sel.value, sel);
+    });
+  });
+  container.querySelectorAll('button[data-action="password"]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      setUserPassword(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+    });
+  });
+  container.querySelectorAll('button[data-action="delete"]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      deleteUser(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+    });
+  });
+}
+
+// Calls the admin-manage-user edge function with the caller's JWT.
+function callAdminFn(payload) {
+  return sbClient().auth.getSession().then(function(sess) {
+    var token = sess.data && sess.data.session && sess.data.session.access_token;
+    if (!token) throw new Error('No active session');
+    return fetch(SUPABASE_URL + '/functions/v1/admin-manage-user', {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify(payload),
+    }).then(function(r) {
+      return r.json().then(function(data) {
+        if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+        return data;
+      });
+    });
+  });
+}
+
+function inviteUser() {
+  var email    = (document.getElementById('inv-email').value    || '').trim();
+  var name     = (document.getElementById('inv-name').value     || '').trim();
+  var password = (document.getElementById('inv-password').value || '');
+  var role     = document.getElementById('inv-role').value;
+  if (!email)                   return setUsersStatus('Email is required.', 'error');
+  if (password.length < 8)      return setUsersStatus('Password must be at least 8 characters.', 'error');
+  setUsersStatus('Inviting\u2026', '');
+  callAdminFn({ action: 'invite', email: email, password: password, displayName: name, role: role })
+    .then(function() {
+      document.getElementById('inv-email').value = '';
+      document.getElementById('inv-name').value = '';
+      document.getElementById('inv-password').value = '';
+      document.getElementById('inv-role').value = 'client';
+      setUsersStatus('Invited ' + email, 'success');
+      return loadUsers().then(renderUsers);
+    })
+    .catch(function(e) { setUsersStatus('Invite failed: ' + (e.message || e), 'error'); });
+}
+
+function changeUserRole(userId, newRole, selEl) {
+  var prev = null;
+  for (var i = 0; i < _users.length; i++) if (_users[i].id === userId) prev = _users[i].role;
+  setUsersStatus('Updating role\u2026', '');
+  sbClient().from('profiles').update({ role: newRole }).eq('id', userId).then(function(res) {
+    if (res.error) throw res.error;
+    for (var i = 0; i < _users.length; i++) if (_users[i].id === userId) _users[i].role = newRole;
+    setUsersStatus('Role updated.', 'success');
+    setTimeout(function() { setUsersStatus('', ''); }, 1500);
+    // Refresh role badge on the card
+    renderUsers();
+  }).catch(function(e) {
+    setUsersStatus('Role change failed: ' + (e.message || e), 'error');
+    if (selEl && prev) selEl.value = prev;
+  });
+}
+
+function setUserPassword(userId, name) {
+  var next = window.prompt('Enter a new password for ' + name + ' (min 8 characters):', '');
+  if (next === null) return;
+  if (next.length < 8) return setUsersStatus('Password must be at least 8 characters.', 'error');
+  setUsersStatus('Updating password\u2026', '');
+  callAdminFn({ action: 'setPassword', userId: userId, newPassword: next })
+    .then(function() { setUsersStatus('Password updated for ' + name, 'success'); })
+    .catch(function(e) { setUsersStatus('Password update failed: ' + (e.message || e), 'error'); });
+}
+
+function deleteUser(userId, name) {
+  showConfirm('Delete ' + name + '?', 'This permanently removes the account. Any assessments they created remain but become orphaned.', function() {
+    setUsersStatus('Deleting\u2026', '');
+    callAdminFn({ action: 'delete', userId: userId })
+      .then(function() {
+        setUsersStatus('Deleted ' + name, 'success');
+        return loadUsers().then(renderUsers);
+      })
+      .catch(function(e) { setUsersStatus('Delete failed: ' + (e.message || e), 'error'); });
   });
 }
 
@@ -1813,13 +2087,16 @@ document.getElementById('btn-signin').addEventListener('click', doSignIn);
 document.getElementById('btn-signout').addEventListener('click', doSignOut);
 document.getElementById('btn-signout-home').addEventListener('click', doSignOut);
 document.getElementById('btn-signout-clients').addEventListener('click', doSignOut);
+document.getElementById('btn-signout-users').addEventListener('click', doSignOut);
 document.getElementById('btn-denied-signout').addEventListener('click', doSignOut);
 document.getElementById('btn-back-home').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-back-home-clients').addEventListener('click', function() { showScreen('screen-home'); });
+document.getElementById('btn-back-home-users').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-add-client').addEventListener('click', addClient);
 document.getElementById('new-client-name').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') addClient();
 });
+document.getElementById('btn-invite-user').addEventListener('click', inviteUser);
 
 // Admin-home menu tile routing
 document.querySelectorAll('#screen-home .menu-tile').forEach(function(tile) {
@@ -1828,6 +2105,7 @@ document.querySelectorAll('#screen-home .menu-tile').forEach(function(tile) {
     var action = tile.getAttribute('data-action');
     if (action === 'files')        openFilesManager();
     else if (action === 'clients') openClientsAdmin();
+    else if (action === 'users')   openUsersAdmin();
   });
 });
 
