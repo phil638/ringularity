@@ -56,8 +56,9 @@ body::after {
   opacity: 0.6;
 }
 .screen,
-.header,
-.modal-overlay { position: relative; z-index: 1; }
+.header { position: relative; z-index: 1; }
+/* modal-overlay intentionally NOT in the above list — it needs its original
+   position:fixed and z-index:100 to work as a full-screen modal. */
 
 /* Paper panels wrap admin section content so they stand out over the forest. */
 .section-wrap,
@@ -1009,6 +1010,7 @@ body::after {
 <div class="screen" id="screen-home">
   <div class="header">
     <div class="header-left">
+      <button class="btn-back btn-client-console" title="Switch to the client-facing assessment">&#8592; Client Console</button>
       <div class="header-logo">Ringularity <span>Admin Console</span></div>
     </div>
     <div class="header-right">
@@ -1058,6 +1060,7 @@ body::after {
   <div class="header">
     <div class="header-left">
       <button class="btn-back" id="btn-back-home" title="Back to Admin Home">&#8592; Admin Home</button>
+      <button class="btn-back btn-client-console" title="Switch to the client-facing assessment">&#8592; Client Console</button>
       <div class="header-logo">Ringularity <span>File Manager</span></div>
       <div class="header-stats" id="header-stats"></div>
     </div>
@@ -1118,6 +1121,7 @@ body::after {
   <div class="header">
     <div class="header-left">
       <button class="btn-back" id="btn-back-home-growth" title="Back to Admin Home">&#8592; Admin Home</button>
+      <button class="btn-back btn-client-console" title="Switch to the client-facing assessment">&#8592; Client Console</button>
       <div class="header-logo">Ringularity <span>Growth Steps</span></div>
     </div>
     <div class="header-right">
@@ -1151,6 +1155,7 @@ body::after {
   <div class="header">
     <div class="header-left">
       <button class="btn-back" id="btn-back-home-questions" title="Back to Admin Home">&#8592; Admin Home</button>
+      <button class="btn-back btn-client-console" title="Switch to the client-facing assessment">&#8592; Client Console</button>
       <div class="header-logo">Ringularity <span>Assessment Questions</span></div>
     </div>
     <div class="header-right">
@@ -1174,6 +1179,7 @@ body::after {
   <div class="header">
     <div class="header-left">
       <button class="btn-back" id="btn-back-home-users" title="Back to Admin Home">&#8592; Admin Home</button>
+      <button class="btn-back btn-client-console" title="Switch to the client-facing assessment">&#8592; Client Console</button>
       <div class="header-logo">Ringularity <span>Users</span></div>
     </div>
     <div class="header-right">
@@ -1214,6 +1220,7 @@ body::after {
   <div class="header">
     <div class="header-left">
       <button class="btn-back" id="btn-back-home-clients" title="Back to Admin Home">&#8592; Admin Home</button>
+      <button class="btn-back btn-client-console" title="Switch to the client-facing assessment">&#8592; Client Console</button>
       <div class="header-logo">Ringularity <span>Clients</span></div>
     </div>
     <div class="header-right">
@@ -2759,6 +2766,10 @@ document.getElementById('btn-back-home-clients').addEventListener('click', funct
 document.getElementById('btn-back-home-users').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-back-home-questions').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-back-home-growth').addEventListener('click', function() { showScreen('screen-home'); });
+// All "Client Console" back buttons (admin home + 5 sub-pages) -> assessment app.
+document.querySelectorAll('.btn-client-console').forEach(function(btn) {
+  btn.addEventListener('click', function() { window.location.href = 'assessment.html'; });
+});
 document.getElementById('btn-add-client').addEventListener('click', addClient);
 document.getElementById('new-client-name').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') addClient();

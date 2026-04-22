@@ -19,6 +19,12 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 body.rf-auth-state .screen .lp-wrap,body.rf-auth-state .screen .sub-wrap{background:transparent;color:inherit;box-shadow:none;padding:0;}
 .site-header{background:var(--ink);color:var(--paper);padding:14px 28px;border-bottom:3px solid var(--accent);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
 .logo-area{display:flex;align-items:center;gap:14px;cursor:pointer;}
+/* Spinning rectangle + gold dot around the small header logo — "always top left". */
+.logo-ring-wrap{position:relative;display:inline-block;}
+.logo-ring-wrap .logo-ring{position:absolute;inset:-6px;border-radius:10px;border:1.5px solid rgba(184,146,74,0.45);pointer-events:none;animation:hdr-spin-slow 30s linear infinite;}
+.logo-ring-wrap .logo-ring::before{content:'';position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#b8924a;animation:hdr-dot-spin 15s linear infinite;}
+@keyframes hdr-spin-slow{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes hdr-dot-spin{from{transform:translateX(-50%) rotate(0deg);}to{transform:translateX(-50%) rotate(-360deg);}}
 .logo-img{height:54px;width:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
 .logo-text{display:flex;flex-direction:column;}
 .logo-brand{font-family:'Playfair Display',serif;font-size:1.45rem;font-weight:700;color:var(--paper);letter-spacing:-0.01em;}
@@ -677,8 +683,11 @@ body.rf-auth-state .progress-bar-wrap {
 
 <!-- HEADER -->
 <header class="site-header">
-  <div class="logo-area" onclick="logoClick()" style="cursor:pointer;" title="Home">
-    <img src="Tree_professional.jpg" class="logo-img" alt="Ringularity">
+  <div class="logo-area" onclick="logoClick()" style="cursor:pointer;" title="Back to ringularity.net home">
+    <div class="logo-ring-wrap">
+      <div class="logo-ring"></div>
+      <img src="Tree_professional.jpg" class="logo-img" alt="Ringularity">
+    </div>
     <div class="logo-text">
       <span class="logo-brand">RINGULARITY</span>
       <span class="logo-tagline">Growth Steps Assessment</span>
@@ -791,10 +800,7 @@ body.rf-auth-state .progress-bar-wrap {
 <!-- SCREEN: LANDING -->
 <div id="screen-landing" class="screen">
   <div class="lp-wrap">
-    <div class="rf-logo-wrap lp-logo-wrap" style="margin-bottom:24px;">
-      <div class="rf-logo-ring"></div>
-      <img src="Tree_professional.jpg" class="rf-logo-img lp-logo-img" alt="Ringularity">
-    </div>
+    <img src="Tree_professional.jpg" class="lp-logo" alt="Ringularity">
     <h1 class="lp-title">Growth Steps Assessment</h1>
 
     <div class="lp-user-bar" id="lp-user-bar" style="display:none;">
@@ -1590,17 +1596,8 @@ function goBackFromGrowthSteps() {
 }
 
 function logoClick() {
-  // If not logged in, navigate to the main website
-  if (!_currentUser) {
-    window.location.href = 'https://www.ringularity.net';
-    return;
-  }
-  var selectScreen = document.getElementById('screen-select');
-  if (selectScreen && selectScreen.classList.contains('active')) {
-    window.location.href = 'https://www.ringularity.net';
-  } else {
-    goHome();
-  }
+  // Clicking the Ringularity logo always returns to the marketing site (index).
+  window.location.href = '/';
 }
 
 function goHome() {
