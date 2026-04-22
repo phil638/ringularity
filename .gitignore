@@ -1,0 +1,6 @@
+# Claude Code local scratch — only settings.json is tracked
+.claude/*
+!.claude/settings.json
+
+# Netlify CLI local state
+.netlify/
