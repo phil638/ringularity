@@ -550,6 +550,127 @@ body {
   padding: 2px 10px;
 }
 
+/* ── Generic admin section layout ── */
+.section-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 56px;
+}
+.panel-head {
+  margin-bottom: 24px;
+}
+.panel-head h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.panel-sub {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.text-input {
+  flex: 1;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--ink);
+}
+.text-input:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+.add-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+.status-msg {
+  min-height: 22px;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+.status-msg.error   { color: var(--danger); }
+.status-msg.success { color: var(--success); }
+
+/* ── Clients list ── */
+.clients-list { display: flex; flex-direction: column; gap: 12px; }
+.client-card {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--card-shadow);
+}
+.client-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.client-card-name {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.client-card-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.client-card-actions { display: flex; gap: 6px; }
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  border: 1px solid var(--rule);
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+}
+.btn-sm:hover { background: var(--paper); border-color: var(--ink); }
+.btn-sm.danger { color: var(--danger); }
+.btn-sm.danger:hover { background: var(--danger-bg); border-color: var(--danger); }
+.consultants-row {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--rule);
+  font-size: 0.86rem;
+}
+.consultants-row .cs-label {
+  color: var(--muted);
+  margin-right: 10px;
+  font-weight: 600;
+}
+.consultants-row label {
+  margin-right: 14px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.consultants-row label input {
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.consultants-empty {
+  color: var(--muted);
+  font-style: italic;
+}
+.rename-input {
+  font-size: 1.02rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  background: #fff;
+  font-family: inherit;
+}
+
 /* ── Back button on file-manager header ── */
 .btn-back {
   background: transparent;
@@ -635,11 +756,10 @@ body {
         <div class="tile-sub">Setup &amp; administer users</div>
         <div class="tile-badge">Coming soon</div>
       </a>
-      <a class="menu-tile" data-action="clients" data-disabled="1">
+      <a class="menu-tile" data-action="clients">
         <div class="tile-icon">&#x1F3E2;</div>
         <div class="tile-title">Clients</div>
         <div class="tile-sub">Setup &amp; administer clients</div>
-        <div class="tile-badge">Coming soon</div>
       </a>
       <a class="menu-tile" data-action="questions" data-disabled="1">
         <div class="tile-icon">&#x1F4DD;</div>
@@ -721,6 +841,35 @@ body {
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ═══ CLIENTS ADMIN SCREEN ═══ -->
+<div class="screen" id="screen-clients">
+  <div class="header">
+    <div class="header-left">
+      <button class="btn-back" id="btn-back-home-clients" title="Back to Admin Home">&#8592; Admin Home</button>
+      <div class="header-logo">Ringularity <span>Clients</span></div>
+    </div>
+    <div class="header-right">
+      <div class="header-email" id="clients-header-email"></div>
+      <button class="btn-signout" id="btn-signout-clients">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="section-wrap">
+    <div class="panel-head">
+      <h2>Clients</h2>
+      <p class="panel-sub">Manage client organisations. Assign consultants to the clients they serve.</p>
+    </div>
+
+    <div class="add-row">
+      <input type="text" id="new-client-name" class="text-input" placeholder="New client name" maxlength="120" />
+      <button class="btn btn-primary" id="btn-add-client">+ Add Client</button>
+    </div>
+
+    <div id="clients-status" class="status-msg"></div>
+    <div id="clients-list" class="clients-list"></div>
   </div>
 </div>
 
@@ -953,6 +1102,213 @@ function openFilesManager() {
   loadAllResources().then(function() {
     renderFolderTree();
     renderHeaderStats();
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CLIENTS ADMIN
+// ════════════════════════════════════════════════════════════════════
+var _clients        = [];  // [{id, name, created_at, assessment_count}]
+var _consultants    = [];  // [{id, email, display_name, role}] — admins + consultants
+var _userClientsMap = {};  // client_id -> Set of user_id
+
+function openClientsAdmin() {
+  var email = (_currentUser && _currentUser.email) || '';
+  document.getElementById('clients-header-email').textContent = email;
+  showScreen('screen-clients');
+  setClientsStatus('Loading\u2026', '');
+  loadClientsData().then(function() {
+    renderClients();
+    setClientsStatus('', '');
+  }).catch(function(e) {
+    setClientsStatus('Could not load clients: ' + (e.message || e), 'error');
+  });
+}
+
+function setClientsStatus(msg, type) {
+  var el = document.getElementById('clients-status');
+  el.textContent = msg || '';
+  el.className = 'status-msg' + (type ? ' ' + type : '');
+}
+
+function loadClientsData() {
+  var sb = sbClient();
+  return Promise.all([
+    sb.from('clients').select('id, name, created_at').order('name'),
+    sb.from('profiles').select('id, email, display_name, role').in('role', ['consultant', 'admin']).order('display_name'),
+    sb.from('user_clients').select('user_id, client_id'),
+    sb.from('assessments').select('client_id')
+  ]).then(function(results) {
+    var clientsRes = results[0], profilesRes = results[1], linksRes = results[2], assessmentsRes = results[3];
+    if (clientsRes.error)     throw clientsRes.error;
+    if (profilesRes.error)    throw profilesRes.error;
+    if (linksRes.error)       throw linksRes.error;
+    if (assessmentsRes.error) throw assessmentsRes.error;
+
+    _consultants = profilesRes.data || [];
+
+    _userClientsMap = {};
+    (linksRes.data || []).forEach(function(row) {
+      if (!_userClientsMap[row.client_id]) _userClientsMap[row.client_id] = {};
+      _userClientsMap[row.client_id][row.user_id] = true;
+    });
+
+    var assessmentCounts = {};
+    (assessmentsRes.data || []).forEach(function(a) {
+      if (a.client_id) assessmentCounts[a.client_id] = (assessmentCounts[a.client_id] || 0) + 1;
+    });
+
+    _clients = (clientsRes.data || []).map(function(c) {
+      return { id: c.id, name: c.name, created_at: c.created_at, assessment_count: assessmentCounts[c.id] || 0 };
+    });
+  });
+}
+
+function renderClients() {
+  var container = document.getElementById('clients-list');
+  if (_clients.length === 0) {
+    container.innerHTML = '<div class="empty-state"><h3>No clients yet</h3><p>Add one above to get started.</p></div>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < _clients.length; i++) {
+    var c = _clients[i];
+    var linked = _userClientsMap[c.id] || {};
+    html += '<div class="client-card" data-id="' + escAttr(c.id) + '">'
+          +   '<div class="client-card-head">'
+          +     '<div>'
+          +       '<div class="client-card-name" data-role="name">' + esc(c.name) + '</div>'
+          +       '<div class="client-card-meta">' + c.assessment_count + ' assessment' + (c.assessment_count === 1 ? '' : 's') + '</div>'
+          +     '</div>'
+          +     '<div class="client-card-actions">'
+          +       '<button class="btn-sm" data-action="rename" data-id="' + escAttr(c.id) + '">Rename</button>'
+          +       '<button class="btn-sm danger" data-action="delete" data-id="' + escAttr(c.id) + '">Delete</button>'
+          +     '</div>'
+          +   '</div>';
+
+    if (_consultants.length === 0) {
+      html += '<div class="consultants-row"><span class="cs-label">Consultants:</span><span class="consultants-empty">no consultants or admins configured yet</span></div>';
+    } else {
+      html += '<div class="consultants-row"><span class="cs-label">Consultants &amp; admins:</span>';
+      for (var j = 0; j < _consultants.length; j++) {
+        var u = _consultants[j];
+        var checked = linked[u.id] ? ' checked' : '';
+        var displayName = u.display_name || u.email || u.id;
+        var roleBadge = u.role === 'admin' ? ' (admin)' : '';
+        html += '<label><input type="checkbox" data-role="link" data-client-id="' + escAttr(c.id) + '" data-user-id="' + escAttr(u.id) + '"' + checked + '/> ' + esc(displayName) + esc(roleBadge) + '</label>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+
+  // Wire up per-row buttons
+  container.querySelectorAll('button[data-action="rename"]').forEach(function(btn) {
+    btn.addEventListener('click', function() { beginRenameClient(btn.getAttribute('data-id')); });
+  });
+  container.querySelectorAll('button[data-action="delete"]').forEach(function(btn) {
+    btn.addEventListener('click', function() { deleteClient(btn.getAttribute('data-id')); });
+  });
+  container.querySelectorAll('input[data-role="link"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      toggleConsultantLink(cb.getAttribute('data-client-id'), cb.getAttribute('data-user-id'), cb.checked, cb);
+    });
+  });
+}
+
+function addClient() {
+  var input = document.getElementById('new-client-name');
+  var name = (input.value || '').trim();
+  if (!name) { setClientsStatus('Please enter a client name.', 'error'); return; }
+  setClientsStatus('Adding\u2026', '');
+  sbClient().from('clients').insert({ name: name }).select().single().then(function(res) {
+    if (res.error) throw res.error;
+    input.value = '';
+    setClientsStatus('Added ' + name, 'success');
+    return loadClientsData().then(renderClients);
+  }).catch(function(e) {
+    var msg = e.message || String(e);
+    if (msg.indexOf('duplicate') !== -1 || msg.indexOf('unique') !== -1) {
+      setClientsStatus('A client with that name already exists.', 'error');
+    } else {
+      setClientsStatus('Add failed: ' + msg, 'error');
+    }
+  });
+}
+
+function beginRenameClient(clientId) {
+  var card = document.querySelector('.client-card[data-id="' + clientId + '"]');
+  if (!card) return;
+  var nameEl = card.querySelector('[data-role="name"]');
+  var current = nameEl.textContent;
+  nameEl.innerHTML = '<input type="text" class="rename-input" value="' + escAttr(current) + '" maxlength="120"/>';
+  var input = nameEl.querySelector('input');
+  input.focus();
+  input.select();
+  var done = false;
+  function commit() {
+    if (done) return;
+    done = true;
+    var next = (input.value || '').trim();
+    if (!next || next === current) { renderClients(); return; }
+    setClientsStatus('Renaming\u2026', '');
+    sbClient().from('clients').update({ name: next }).eq('id', clientId).then(function(res) {
+      if (res.error) throw res.error;
+      setClientsStatus('Renamed to ' + next, 'success');
+      return loadClientsData().then(renderClients);
+    }).catch(function(e) {
+      setClientsStatus('Rename failed: ' + (e.message || e), 'error');
+      renderClients();
+    });
+  }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    else if (e.key === 'Escape') { done = true; renderClients(); }
+  });
+}
+
+function deleteClient(clientId) {
+  var client = null;
+  for (var i = 0; i < _clients.length; i++) if (_clients[i].id === clientId) client = _clients[i];
+  if (!client) return;
+  var detail = client.assessment_count > 0
+    ? 'This client has ' + client.assessment_count + ' assessment(s). Deletion is blocked by the database.'
+    : 'This cannot be undone.';
+  showConfirm('Delete ' + client.name + '?', detail, function() {
+    setClientsStatus('Deleting\u2026', '');
+    sbClient().from('clients').delete().eq('id', clientId).then(function(res) {
+      if (res.error) throw res.error;
+      setClientsStatus('Deleted ' + client.name, 'success');
+      return loadClientsData().then(renderClients);
+    }).catch(function(e) {
+      var msg = e.message || String(e);
+      if (msg.indexOf('foreign key') !== -1 || msg.indexOf('violates') !== -1) {
+        setClientsStatus('Cannot delete: referenced by assessments or user assignments.', 'error');
+      } else {
+        setClientsStatus('Delete failed: ' + msg, 'error');
+      }
+    });
+  });
+}
+
+function toggleConsultantLink(clientId, userId, checked, cbEl) {
+  var sb = sbClient();
+  var op = checked
+    ? sb.from('user_clients').insert({ client_id: clientId, user_id: userId })
+    : sb.from('user_clients').delete().eq('client_id', clientId).eq('user_id', userId);
+  op.then(function(res) {
+    if (res.error) throw res.error;
+    if (!_userClientsMap[clientId]) _userClientsMap[clientId] = {};
+    if (checked) _userClientsMap[clientId][userId] = true;
+    else delete _userClientsMap[clientId][userId];
+    setClientsStatus('Saved.', 'success');
+    setTimeout(function() { setClientsStatus('', ''); }, 1500);
+  }).catch(function(e) {
+    setClientsStatus((checked ? 'Assignment failed: ' : 'Unassignment failed: ') + (e.message || e), 'error');
+    cbEl.checked = !checked;
   });
 }
 
@@ -1456,15 +1812,22 @@ function renderHeaderStats() {
 document.getElementById('btn-signin').addEventListener('click', doSignIn);
 document.getElementById('btn-signout').addEventListener('click', doSignOut);
 document.getElementById('btn-signout-home').addEventListener('click', doSignOut);
+document.getElementById('btn-signout-clients').addEventListener('click', doSignOut);
 document.getElementById('btn-denied-signout').addEventListener('click', doSignOut);
 document.getElementById('btn-back-home').addEventListener('click', function() { showScreen('screen-home'); });
+document.getElementById('btn-back-home-clients').addEventListener('click', function() { showScreen('screen-home'); });
+document.getElementById('btn-add-client').addEventListener('click', addClient);
+document.getElementById('new-client-name').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') addClient();
+});
 
 // Admin-home menu tile routing
 document.querySelectorAll('#screen-home .menu-tile').forEach(function(tile) {
   tile.addEventListener('click', function() {
     if (tile.getAttribute('data-disabled') === '1') return;
     var action = tile.getAttribute('data-action');
-    if (action === 'files') openFilesManager();
+    if (action === 'files')        openFilesManager();
+    else if (action === 'clients') openClientsAdmin();
   });
 });
 
