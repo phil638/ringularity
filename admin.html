@@ -28,11 +28,50 @@
 html { font-size: 15px; }
 body {
   font-family: 'DM Sans', sans-serif;
-  background: var(--paper);
+  background: #101812;
   color: var(--ink);
   min-height: 100vh;
   line-height: 1.55;
+  position: relative;
 }
+
+/* ── Forest background + grain overlay (always on) ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(10,20,12,0.72) 0%, rgba(10,20,12,0.55) 40%, rgba(10,20,12,0.72) 100%),
+    url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=85&fit=crop') center 30% / cover no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+.screen,
+.header,
+.modal-overlay { position: relative; z-index: 1; }
+
+/* Paper panels wrap admin section content so they stand out over the forest. */
+.section-wrap,
+.home-wrap,
+.layout {
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 12px;
+  margin: 24px auto 40px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+}
+.home-wrap { padding: 48px 32px 56px; }
+.section-wrap { padding: 32px 28px 48px; }
+.layout { margin-top: 16px; margin-bottom: 24px; }
 
 /* ── Screens ── */
 .screen { display: none; }
@@ -903,22 +942,23 @@ body {
 }
 @media (max-width: 700px) { .gs-fields-grid { grid-template-columns: 1fr; } }
 
-/* ── Back button on file-manager header ── */
+/* ── Back button on admin sub-page headers — always visible ── */
 .btn-back {
-  background: transparent;
-  border: 1px solid var(--rule);
+  background: var(--paper);
+  border: 1px solid var(--ink);
   border-radius: var(--radius);
   padding: 6px 12px;
   margin-right: 12px;
   font-size: 0.82rem;
   color: var(--ink);
+  font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 .btn-back:hover {
-  background: var(--paper);
-  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
 }
 </style>
 <script>/* Supabase JS v2.49.4 — embedded inline, no CDN required */
