@@ -13,13 +13,27 @@
       "mcp__0331980f-13c3-48d4-872c-ecd53a5aa538__get_advisors",
       "mcp__0331980f-13c3-48d4-872c-ecd53a5aa538__search_docs",
       "mcp__0331980f-13c3-48d4-872c-ecd53a5aa538__generate_typescript_types",
+      "mcp__0331980f-13c3-48d4-872c-ecd53a5aa538__execute_sql",
+      "mcp__0331980f-13c3-48d4-872c-ecd53a5aa538__apply_migration",
+      "mcp__0331980f-13c3-48d4-872c-ecd53a5aa538__deploy_edge_function",
       "Bash(git fetch*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(git checkout*)",
+      "Bash(git reset origin/*)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh pr edit*)",
+      "Bash(gh pr reopen*)",
+      "Bash(gh pr close*)",
       "Bash(netlify status*)",
       "Bash(netlify sites:list*)",
       "Bash(netlify sites*)",
       "Bash(netlify api list*)",
       "Bash(where *)",
-      "Bash(whereis *)"
+      "Bash(whereis *)",
+      "Bash(chmod *)"
     ]
   }
 }
