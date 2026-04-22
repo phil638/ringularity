@@ -8,7 +8,15 @@
 <style>
 :root{--ink:#1a1a2e;--paper:#f8f6f1;--accent:#c8813a;--accent2:#2d6a4f;--muted:#6b6b7a;--rule:#e0ddd6;--germination:#c0392b;--growth-ph:#e67e22;--maturity-ph:#2980b9;--renewal:#27ae60;--firefight:#c0392b;--align:#e67e22;--systemize:#2980b9;--future:#27ae60;--selected-bg:#1a1a2e;--card-shadow:0 2px 12px rgba(26,26,46,0.08);--radius:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.6;min-height:100vh;}
+body{font-family:'DM Sans',sans-serif;background:#101812;color:var(--ink);font-size:15px;line-height:1.6;min-height:100vh;position:relative;}
+/* Forest background + grain overlay — applied on every screen. */
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(to bottom,rgba(10,20,12,0.72) 0%,rgba(10,20,12,0.55) 40%,rgba(10,20,12,0.72) 100%),url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=85&fit=crop') center 30% / cover no-repeat;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
+.site-header,.progress-bar-wrap,.screen{position:relative;z-index:1;}
+/* Paper panels wrap content on non-auth screens so they stand out over the forest. */
+.screen .lp-wrap,.screen .sub-wrap,.screen .ass-wrap{background:var(--paper);color:var(--ink);border-radius:12px;padding:36px 30px 44px;box-shadow:0 10px 40px rgba(0,0,0,0.35);margin:28px auto 40px;}
+/* Auth/select screens keep their transparent look (the rf-* styles below) */
+body.rf-auth-state .screen .lp-wrap,body.rf-auth-state .screen .sub-wrap{background:transparent;color:inherit;box-shadow:none;padding:0;}
 .site-header{background:var(--ink);color:var(--paper);padding:14px 28px;border-bottom:3px solid var(--accent);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
 .logo-area{display:flex;align-items:center;gap:14px;cursor:pointer;}
 .logo-img{height:54px;width:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
@@ -310,30 +318,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);f
 .select-signout a:hover{text-decoration:underline;}
 
 /* ══ RINGULARITY FOREST THEME (auth + select + set-password) ══ */
-body.rf-bg {
-  position: relative;
-  background: #101812;
-  color: #f5f2ec;
-}
-body.rf-bg::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    linear-gradient(to bottom, rgba(10,20,12,0.72) 0%, rgba(10,20,12,0.55) 40%, rgba(10,20,12,0.72) 100%),
-    url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=85&fit=crop') center 30% / cover no-repeat;
-  pointer-events: none;
-  z-index: 0;
-}
-body.rf-bg::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.6;
-}
+/* Forest background is now applied unconditionally on body (see top of stylesheet).
+   body.rf-bg remains as a color-scheme shim so the auth/select screens keep their
+   dark cream text colour. */
+body.rf-bg { color: #f5f2ec; }
 .rf-stage {
   position: relative;
   z-index: 1;
@@ -803,7 +791,10 @@ body.rf-auth-state .progress-bar-wrap {
 <!-- SCREEN: LANDING -->
 <div id="screen-landing" class="screen">
   <div class="lp-wrap">
-    <img src="Tree_professional.jpg" class="lp-logo" alt="Ringularity">
+    <div class="rf-logo-wrap lp-logo-wrap" style="margin-bottom:24px;">
+      <div class="rf-logo-ring"></div>
+      <img src="Tree_professional.jpg" class="rf-logo-img lp-logo-img" alt="Ringularity">
+    </div>
     <h1 class="lp-title">Growth Steps Assessment</h1>
 
     <div class="lp-user-bar" id="lp-user-bar" style="display:none;">
