@@ -844,6 +844,12 @@ body.rf-auth-state .progress-bar-wrap {
       <h3>New Assessment</h3>
       <p class="fw-sub">Give this assessment a name &#8212; for example, your organisation&#8217;s name, a department, or a date-based label.</p>
       <div class="field">
+        <label>Client *</label>
+        <select id="new-client" class="form-select"></select>
+        <div id="new-client-readonly" style="display:none;font-size:0.95rem;padding:10px 12px;background:var(--rule);border-radius:4px;color:var(--ink);font-weight:600;"></div>
+        <div id="new-client-empty" style="display:none;font-size:0.85rem;color:var(--accent);margin-top:6px;">You are not yet assigned to a client. Ask an admin to assign one before starting an assessment.</div>
+      </div>
+      <div class="field">
         <label>Assessment Name *</label>
         <input type="text" id="new-name" placeholder="e.g. Ringularity HQ &#8211; Q3 2026" maxlength="80">
       </div>
@@ -1618,7 +1624,50 @@ function setProgress(pct) {
 // LANDING
 // ════════════════════════════════════════════════
 function showNewSetup() {
+  populateNewSetupClientSelector();
   showScreen('screen-new-setup');
+}
+
+// Role-aware client picker for the New Assessment form.
+// - admin        : dropdown of every client
+// - consultant   : dropdown of clients they are linked to (1 → pre-selected; 0 → empty-state msg)
+// - client       : read-only display of their single linked client
+function populateNewSetupClientSelector() {
+  var sel      = document.getElementById('new-client');
+  var readonly = document.getElementById('new-client-readonly');
+  var empty    = document.getElementById('new-client-empty');
+  sel.innerHTML      = '';
+  readonly.style.display = 'none';
+  empty.style.display    = 'none';
+
+  if (_availableClients.length === 0) {
+    sel.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+
+  if (_currentRole === 'client') {
+    // Show the single linked client, read-only. If somehow >1, pick the first.
+    var c = _availableClients[0];
+    sel.style.display = 'none';
+    readonly.textContent = c.name;
+    readonly.setAttribute('data-client-id', c.id);
+    readonly.style.display = 'block';
+    return;
+  }
+
+  // admin or consultant: dropdown of their available clients
+  sel.style.display = '';
+  if (_currentRole !== 'admin' && _availableClients.length === 1) {
+    // Consultant with a single assigned client — still a dropdown (just one option)
+    // so the UI stays consistent, but pre-selected.
+  }
+  for (var i = 0; i < _availableClients.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = _availableClients[i].id;
+    opt.textContent = _availableClients[i].name;
+    sel.appendChild(opt);
+  }
 }
 
 function showPast() {
@@ -1630,6 +1679,28 @@ function showPast() {
 // NEW ASSESSMENT
 // ════════════════════════════════════════════════
 function startNew() {
+  // Resolve the selected client based on the user's role.
+  var clientId   = null;
+  var clientName = null;
+  var readonly   = document.getElementById('new-client-readonly');
+  var sel        = document.getElementById('new-client');
+  if (_availableClients.length === 0) {
+    alert('No client is assigned to your account yet. Ask an administrator to assign you to a client before starting an assessment.');
+    return;
+  }
+  if (readonly.style.display !== 'none') {
+    clientId   = readonly.getAttribute('data-client-id');
+    clientName = readonly.textContent;
+  } else if (sel && sel.value) {
+    clientId   = sel.value;
+    clientName = sel.options[sel.selectedIndex].textContent;
+  }
+  if (!clientId) {
+    alert('Please select a client for this assessment.');
+    if (sel && sel.style.display !== 'none') sel.focus();
+    return;
+  }
+
   var nameEl = document.getElementById('new-name');
   var name = nameEl.value.trim();
   if (!name) {
@@ -1640,7 +1711,7 @@ function startNew() {
   nameEl.classList.remove('error');
   var assessor = document.getElementById('new-assessor').value.trim();
   var id = genId();
-  var rec = { id: id, name: name, assessor: assessor, createdAt: Date.now(), status: 'draft', versions: [] };
+  var rec = { id: id, name: name, assessor: assessor, clientId: clientId, clientName: clientName, createdAt: Date.now(), status: 'draft', versions: [] };
   dbUpsert(rec);
 
   S.activeId = id;
@@ -2409,9 +2480,11 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 // ════════════════════════════════════════════════════════════════════════
 // AUTH STATE
 // ════════════════════════════════════════════════════════════════════════
-var _sbClient    = null;
-var _currentUser = null;
-var _isAdmin     = false;
+var _sbClient         = null;
+var _currentUser      = null;
+var _isAdmin          = false;
+var _currentRole      = null;  // 'admin' | 'consultant' | 'client'
+var _availableClients = [];    // [{id, name}] — clients this user may assign an assessment to
 
 function sbClient() {
   if (!_sbClient) {
@@ -2471,14 +2544,25 @@ function currentUserName() {
 // ADMIN ROLE  –  stored in a profiles table in Supabase
 // ════════════════════════════════════════════════════════════════════════
 async function checkAdminRole() {
-  if (!currentUserId()) { _isAdmin = false; return false; }
+  if (!currentUserId()) { _isAdmin = false; _currentRole = null; return false; }
   var res = await sbClient()
     .from('profiles')
     .select('role')
     .eq('id', currentUserId())
     .single();
-  _isAdmin = !!(res.data && res.data.role === 'admin');
+  _currentRole = (res.data && res.data.role) || null;
+  _isAdmin     = _currentRole === 'admin';
   return _isAdmin;
+}
+
+// Fetch the clients the current user can assign an assessment to. RLS makes
+// this role-aware automatically: admins get all rows, consultants/clients
+// get only the clients they are linked to via user_clients.
+async function loadAvailableClients() {
+  if (!currentUserId()) { _availableClients = []; return; }
+  var res = await sbClient().from('clients').select('id, name').order('name');
+  if (res.error) { console.warn('loadAvailableClients:', res.error); _availableClients = []; return; }
+  _availableClients = res.data || [];
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -2514,13 +2598,16 @@ async function sbFetchAll() {
 // ── Push one record ───────────────────────────────────────────────────────────
 async function sbUpsert(rec) {
   if (!currentUserId()) return;
-  var res = await sbClient().from('assessments').upsert({
+  var row = {
     id:         rec.id,
     user_id:    currentUserId(),
     name:       rec.name,
     data:       JSON.stringify(rec),
     updated_at: new Date().toISOString()
-  }, { onConflict: 'id' });
+  };
+  // Only send client_id if we have one — older records may not carry it.
+  if (rec.clientId) row.client_id = rec.clientId;
+  var res = await sbClient().from('assessments').upsert(row, { onConflict: 'id' });
   if (res.error) console.warn('sbUpsert error:', res.error);
 }
 
@@ -2744,13 +2831,14 @@ async function loadGrowthSteps() {
 }
 
 async function afterLogin() {
-  // Admin check + localStorage sync can run immediately.
-  var adminCheck = checkAdminRole();
-  var syncOp     = syncFromSupabase();
+  // Admin/role check, localStorage sync, and client list can run immediately.
+  var adminCheck  = checkAdminRole();
+  var syncOp      = syncFromSupabase();
+  var clientsOp   = loadAvailableClients();
   // Questions must load before growth steps (growth-step lookup uses QUESTIONS to index).
   await loadQuestions();
   await loadGrowthSteps();
-  await Promise.all([adminCheck, syncOp]);
+  await Promise.all([adminCheck, syncOp, clientsOp]);
 
   // Update header
   document.getElementById('header-user-name').textContent       = currentUserName();
