@@ -1231,8 +1231,8 @@ var SUBTOPICS = {
 // `folderName` holds the legacy Storage folder label (e.g. "2 - Growth/"); folders
 // will be renamed in the growth-steps-to-DB PR along with the auto-index SQL functions.
 var STAGES = [
-  { num: 2, name: 'Root',      folderName: 'Growth'   },
-  { num: 3, name: 'Branch',    folderName: 'Maturity' },
+  { num: 2, name: 'Grounding', folderName: 'Growth'   },
+  { num: 3, name: 'Branching', folderName: 'Maturity' },
   { num: 4, name: 'Evergreen', folderName: 'Renewal'  }
 ];
 
@@ -1605,7 +1605,7 @@ function toggleConsultantLink(clientId, userId, checked, cbEl) {
 // GROWTH STEPS EDITOR
 // ════════════════════════════════════════════════════════════════════
 var _growthSteps = [];
-var _gsStageNames = { 2: 'Root', 3: 'Branch', 4: 'Evergreen' };
+var _gsStageNames = { 2: 'Grounding', 3: 'Branching', 4: 'Evergreen' };
 var _gsFields = [
   { key: 'title',         label: 'Title',          rows: 2 },
   { key: 'inputs',        label: 'Inputs',         rows: 3 },
