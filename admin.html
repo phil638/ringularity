@@ -471,6 +471,102 @@ body {
   .sidebar { width: 100%; min-width: 100%; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--rule); }
   .header { padding: 12px 16px; }
 }
+
+/* ── Admin Home (landing) ── */
+.home-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 24px 64px;
+}
+.home-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.home-sub {
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+.menu-tile {
+  display: block;
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  box-shadow: var(--card-shadow);
+}
+.menu-tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 6px 20px rgba(26,26,46,0.12);
+}
+.menu-tile[data-disabled="1"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.menu-tile[data-disabled="1"]:hover {
+  transform: none;
+  border-color: var(--rule);
+  box-shadow: var(--card-shadow);
+}
+.tile-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+.tile-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.tile-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.tile-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+/* ── Back button on file-manager header ── */
+.btn-back {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  margin-right: 12px;
+  font-size: 0.82rem;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.btn-back:hover {
+  background: var(--paper);
+  border-color: var(--ink);
+}
 </style>
 <script>/* Supabase JS v2.49.4 — embedded inline, no CDN required */
 /**
@@ -516,12 +612,63 @@ body {
   </div>
 </div>
 
-<!-- ═══ MAIN SCREEN ═══ -->
-<div class="screen" id="screen-main">
+<!-- ═══ ADMIN HOME (LANDING) ═══ -->
+<div class="screen" id="screen-home">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo">Ringularity <span>Admin Console</span></div>
+    </div>
+    <div class="header-right">
+      <div class="header-email" id="home-header-email"></div>
+      <button class="btn-signout" id="btn-signout-home">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="home-wrap">
+    <h1 class="home-title">Admin Console</h1>
+    <p class="home-sub">Choose an area to manage.</p>
+
+    <div class="menu-grid">
+      <a class="menu-tile" data-action="users" data-disabled="1">
+        <div class="tile-icon">&#x1F465;</div>
+        <div class="tile-title">Users</div>
+        <div class="tile-sub">Setup &amp; administer users</div>
+        <div class="tile-badge">Coming soon</div>
+      </a>
+      <a class="menu-tile" data-action="clients" data-disabled="1">
+        <div class="tile-icon">&#x1F3E2;</div>
+        <div class="tile-title">Clients</div>
+        <div class="tile-sub">Setup &amp; administer clients</div>
+        <div class="tile-badge">Coming soon</div>
+      </a>
+      <a class="menu-tile" data-action="questions" data-disabled="1">
+        <div class="tile-icon">&#x1F4DD;</div>
+        <div class="tile-title">Assessment Questions</div>
+        <div class="tile-sub">Edit questions and evidence criteria</div>
+        <div class="tile-badge">Coming soon</div>
+      </a>
+      <a class="menu-tile" data-action="growth" data-disabled="1">
+        <div class="tile-icon">&#x1F331;</div>
+        <div class="tile-title">Growth Steps</div>
+        <div class="tile-sub">Edit growth steps</div>
+        <div class="tile-badge">Coming soon</div>
+      </a>
+      <a class="menu-tile" data-action="files">
+        <div class="tile-icon">&#x1F4C1;</div>
+        <div class="tile-title">Manage Files</div>
+        <div class="tile-sub">Upload and organise resources</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FILE MANAGER SCREEN ═══ -->
+<div class="screen" id="screen-files">
 
   <!-- Header -->
   <div class="header">
     <div class="header-left">
+      <button class="btn-back" id="btn-back-home" title="Back to Admin Home">&#8592; Admin Home</button>
       <div class="header-logo">Ringularity <span>File Manager</span></div>
       <div class="header-stats" id="header-stats"></div>
     </div>
@@ -642,10 +789,13 @@ var SUBTOPICS = {
   ]
 };
 
+// Display `name` follows the Seed/Root/Branch/Evergreen rename.
+// `folderName` holds the legacy Storage folder label (e.g. "2 - Growth/"); folders
+// will be renamed in the growth-steps-to-DB PR along with the auto-index SQL functions.
 var STAGES = [
-  { num: 2, name: 'Growth' },
-  { num: 3, name: 'Maturity' },
-  { num: 4, name: 'Renewal' }
+  { num: 2, name: 'Root',      folderName: 'Growth'   },
+  { num: 3, name: 'Branch',    folderName: 'Maturity' },
+  { num: 4, name: 'Evergreen', folderName: 'Renewal'  }
 ];
 
 var FOLDER_TYPES = ['Workshops', 'Supporting Documents'];
@@ -717,11 +867,11 @@ function checkAdminRole() {
   if (!currentUserId()) { _isAdmin = false; return Promise.resolve(false); }
   return sbClient()
     .from('profiles')
-    .select('is_admin')
+    .select('role')
     .eq('id', currentUserId())
     .single()
     .then(function(res) {
-      _isAdmin = !!(res.data && res.data.is_admin);
+      _isAdmin = !!(res.data && res.data.role === 'admin');
       return _isAdmin;
     });
 }
@@ -788,8 +938,18 @@ function restoreSession() {
 }
 
 function afterLogin() {
-  showScreen('screen-main');
-  document.getElementById('header-email').textContent = _currentUser.email || '';
+  var email = (_currentUser && _currentUser.email) || '';
+  document.getElementById('home-header-email').textContent = email;
+  document.getElementById('header-email').textContent      = email;
+  showScreen('screen-home');
+}
+
+// Open the file manager (lazy-loads resources on first open).
+var _filesLoaded = false;
+function openFilesManager() {
+  showScreen('screen-files');
+  if (_filesLoaded) return;
+  _filesLoaded = true;
   loadAllResources().then(function() {
     renderFolderTree();
     renderHeaderStats();
@@ -1193,11 +1353,11 @@ function handleUpload(fileList) {
   if (sf.subtopic) {
     pathPrefix += sf.subtopic + '/';
     if (sf.stage) {
-      var stageName = '';
+      var stageFolder = '';
       for (var s = 0; s < STAGES.length; s++) {
-        if (STAGES[s].num === sf.stage) stageName = STAGES[s].name;
+        if (STAGES[s].num === sf.stage) stageFolder = STAGES[s].folderName;
       }
-      pathPrefix += sf.stage + ' - ' + stageName + '/';
+      pathPrefix += sf.stage + ' - ' + stageFolder + '/';
     }
     if (sf.folderType) {
       pathPrefix += sf.folderType + '/';
@@ -1295,7 +1455,18 @@ function renderHeaderStats() {
 // ════════════════════════════════════════════════════════════════════
 document.getElementById('btn-signin').addEventListener('click', doSignIn);
 document.getElementById('btn-signout').addEventListener('click', doSignOut);
+document.getElementById('btn-signout-home').addEventListener('click', doSignOut);
 document.getElementById('btn-denied-signout').addEventListener('click', doSignOut);
+document.getElementById('btn-back-home').addEventListener('click', function() { showScreen('screen-home'); });
+
+// Admin-home menu tile routing
+document.querySelectorAll('#screen-home .menu-tile').forEach(function(tile) {
+  tile.addEventListener('click', function() {
+    if (tile.getAttribute('data-disabled') === '1') return;
+    var action = tile.getAttribute('data-action');
+    if (action === 'files') openFilesManager();
+  });
+});
 
 // Enter key on password field
 document.getElementById('auth-password').addEventListener('keydown', function(e) {
