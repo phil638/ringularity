@@ -2177,24 +2177,29 @@ function toggleUserClient(userId, clientId, checked, cbEl) {
 }
 
 // Calls the admin-manage-user edge function with the caller's JWT.
+// Use supabase-js functions.invoke() so both the apikey and the user's JWT
+// (Authorization: Bearer ...) headers are attached automatically. Raw fetch
+// was dropping the apikey header, and with verify_jwt enabled the edge
+// function rejected the request with 401 before our code ran.
 function callAdminFn(payload) {
-  return sbClient().auth.getSession().then(function(sess) {
-    var token = sess.data && sess.data.session && sess.data.session.access_token;
-    if (!token) throw new Error('No active session');
-    return fetch(SUPABASE_URL + '/functions/v1/admin-manage-user', {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': 'Bearer ' + token,
-      },
-      body: JSON.stringify(payload),
-    }).then(function(r) {
-      return r.json().then(function(data) {
-        if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
-        return data;
-      });
+  return sbClient().functions.invoke('admin-manage-user', { body: payload })
+    .then(function(res) {
+      if (res.error) {
+        // Try to read the function's JSON body so error messages (e.g.
+        // "Password must be at least 8 characters") surface to the user
+        // instead of the generic "Edge Function returned a non-2xx status".
+        var ctx = res.error && res.error.context;
+        var bodyPromise = (ctx && typeof ctx.json === 'function')
+          ? ctx.json().catch(function() { return null; })
+          : Promise.resolve(null);
+        return bodyPromise.then(function(body) {
+          var msg = (body && body.error) || res.error.message || 'Request failed';
+          throw new Error(msg);
+        });
+      }
+      if (res.data && res.data.error) throw new Error(res.data.error);
+      return res.data;
     });
-  });
 }
 
 function inviteUser() {
