@@ -740,6 +740,110 @@ body {
   font-weight: 600;
 }
 
+/* ── Questions & Growth Steps editors ── */
+.questions-list { display: flex; flex-direction: column; gap: 10px; }
+.question-card {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+.q-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.q-head:hover { background: var(--paper); }
+.q-system {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.q-subtopic {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 2px;
+}
+.q-num-badge {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 700;
+  line-height: 28px;
+  text-align: center;
+  font-size: 0.82rem;
+  margin-right: 10px;
+}
+.q-body {
+  padding: 16px 18px 20px;
+  border-top: 1px solid var(--rule);
+  display: none;
+}
+.question-card.open .q-body { display: block; }
+.q-body label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 14px 0 5px;
+}
+.q-body label:first-child { margin-top: 0; }
+.q-body textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 9px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--ink);
+  line-height: 1.45;
+  resize: vertical;
+  background: #fff;
+}
+.q-body textarea:focus { outline: none; border-color: var(--ink); }
+.phases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+.phase-col {
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 12px 14px;
+  background: var(--paper);
+}
+.phase-col h4 {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.phase-col .phase-1 { color: #c0392b; }
+.phase-col textarea { min-height: 80px; background: #fff; }
+.q-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--rule);
+}
+
 /* ── Back button on file-manager header ── */
 .btn-back {
   background: transparent;
@@ -829,11 +933,10 @@ body {
         <div class="tile-title">Clients</div>
         <div class="tile-sub">Setup &amp; administer clients</div>
       </a>
-      <a class="menu-tile" data-action="questions" data-disabled="1">
+      <a class="menu-tile" data-action="questions">
         <div class="tile-icon">&#x1F4DD;</div>
         <div class="tile-title">Assessment Questions</div>
         <div class="tile-sub">Edit questions and evidence criteria</div>
-        <div class="tile-badge">Coming soon</div>
       </a>
       <a class="menu-tile" data-action="growth" data-disabled="1">
         <div class="tile-icon">&#x1F331;</div>
@@ -909,6 +1012,29 @@ body {
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ═══ QUESTIONS EDITOR SCREEN ═══ -->
+<div class="screen" id="screen-questions">
+  <div class="header">
+    <div class="header-left">
+      <button class="btn-back" id="btn-back-home-questions" title="Back to Admin Home">&#8592; Admin Home</button>
+      <div class="header-logo">Ringularity <span>Assessment Questions</span></div>
+    </div>
+    <div class="header-right">
+      <div class="header-email" id="questions-header-email"></div>
+      <button class="btn-signout" id="btn-signout-questions">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="section-wrap">
+    <div class="panel-head">
+      <h2>Assessment Questions</h2>
+      <p class="panel-sub">Edit the 25 assessment questions and their four-phase maturity rubrics. Phase labels are fixed; edit the evidence and KPIs per phase.</p>
+    </div>
+    <div id="questions-status" class="status-msg"></div>
+    <div id="questions-list" class="questions-list"></div>
   </div>
 </div>
 
@@ -1417,6 +1543,152 @@ function toggleConsultantLink(clientId, userId, checked, cbEl) {
   }).catch(function(e) {
     setClientsStatus((checked ? 'Assignment failed: ' : 'Unassignment failed: ') + (e.message || e), 'error');
     cbEl.checked = !checked;
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// QUESTIONS EDITOR
+// ════════════════════════════════════════════════════════════════════
+var _questions = []; // full rows from public.questions
+
+function openQuestionsAdmin() {
+  var email = (_currentUser && _currentUser.email) || '';
+  document.getElementById('questions-header-email').textContent = email;
+  showScreen('screen-questions');
+  setQuestionsStatus('Loading\u2026', '');
+  loadAdminQuestions().then(function() {
+    renderAdminQuestions();
+    setQuestionsStatus('', '');
+  }).catch(function(e) {
+    setQuestionsStatus('Could not load questions: ' + (e.message || e), 'error');
+  });
+}
+
+function setQuestionsStatus(msg, type) {
+  var el = document.getElementById('questions-status');
+  el.textContent = msg || '';
+  el.className = 'status-msg' + (type ? ' ' + type : '');
+}
+
+function loadAdminQuestions() {
+  return sbClient()
+    .from('questions')
+    .select('id, sort_order, system, subtopic, question, guidance, phases')
+    .order('sort_order', { ascending: true })
+    .then(function(res) {
+      if (res.error) throw res.error;
+      _questions = res.data || [];
+    });
+}
+
+function renderAdminQuestions() {
+  var container = document.getElementById('questions-list');
+  if (_questions.length === 0) {
+    container.innerHTML = '<div class="empty-state"><h3>No questions found</h3></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < _questions.length; i++) {
+    var q = _questions[i];
+    var phases = Array.isArray(q.phases) ? q.phases : [];
+    html += '<div class="question-card" data-id="' + escAttr(q.id) + '">'
+          +   '<div class="q-head" data-role="toggle">'
+          +     '<div style="display:flex;align-items:center">'
+          +       '<span class="q-num-badge">' + q.sort_order + '</span>'
+          +       '<div>'
+          +         '<div class="q-system">' + esc(q.system) + '</div>'
+          +         '<div class="q-subtopic">' + esc(q.subtopic) + '</div>'
+          +       '</div>'
+          +     '</div>'
+          +     '<button class="btn-sm" data-role="toggle-btn">Edit</button>'
+          +   '</div>'
+          +   '<div class="q-body">'
+          +     '<label>Question</label>'
+          +     '<textarea data-field="question" rows="2">' + esc(q.question || '') + '</textarea>'
+          +     '<label>Guidance (shown as a tooltip / helper text)</label>'
+          +     '<textarea data-field="guidance" rows="3">' + esc(q.guidance || '') + '</textarea>'
+          +     '<label>Phase rubrics</label>'
+          +     '<div class="phases-grid">';
+    for (var p = 0; p < 4; p++) {
+      var ph = phases[p] || { phase: '', evidence: '', kpi: '' };
+      html += '<div class="phase-col">'
+            +   '<h4>' + esc(ph.phase || ('Phase ' + (p + 1))) + '</h4>'
+            +   '<label>Evidence</label>'
+            +   '<textarea data-phase="' + p + '" data-subfield="evidence" rows="4">' + esc(ph.evidence || '') + '</textarea>'
+            +   '<label>KPI</label>'
+            +   '<textarea data-phase="' + p + '" data-subfield="kpi" rows="3">' + esc(ph.kpi || '') + '</textarea>'
+            + '</div>';
+    }
+    html +=     '</div>'
+          +     '<div class="q-actions">'
+          +       '<button class="btn-sm" data-role="cancel">Cancel</button>'
+          +       '<button class="btn btn-primary" data-role="save">Save Changes</button>'
+          +     '</div>'
+          +   '</div>'
+          + '</div>';
+  }
+  container.innerHTML = html;
+
+  container.querySelectorAll('.question-card').forEach(function(card) {
+    var head = card.querySelector('.q-head');
+    head.addEventListener('click', function(e) { if (e.target.getAttribute('data-role') !== 'toggle-btn') toggleQuestion(card); });
+    card.querySelector('[data-role="toggle-btn"]').addEventListener('click', function(e) { e.stopPropagation(); toggleQuestion(card); });
+    card.querySelector('[data-role="cancel"]').addEventListener('click', function() {
+      collapseQuestion(card);
+      // Reset fields from server copy
+      renderAdminQuestions();
+    });
+    card.querySelector('[data-role="save"]').addEventListener('click', function() { saveQuestion(card); });
+  });
+}
+
+function toggleQuestion(card) {
+  if (card.classList.contains('open')) collapseQuestion(card);
+  else card.classList.add('open');
+}
+function collapseQuestion(card) { card.classList.remove('open'); }
+
+function saveQuestion(card) {
+  var id = card.getAttribute('data-id');
+  var questionVal = card.querySelector('textarea[data-field="question"]').value.trim();
+  var guidanceVal = card.querySelector('textarea[data-field="guidance"]').value;
+  if (!questionVal) {
+    setQuestionsStatus('Question text cannot be empty.', 'error');
+    return;
+  }
+  // Find the source record to preserve phase labels
+  var src = null;
+  for (var i = 0; i < _questions.length; i++) if (String(_questions[i].id) === String(id)) src = _questions[i];
+  if (!src) { setQuestionsStatus('Record not found — reloading.', 'error'); return loadAdminQuestions().then(renderAdminQuestions); }
+
+  var phases = [];
+  for (var p = 0; p < 4; p++) {
+    var ev  = card.querySelector('textarea[data-phase="' + p + '"][data-subfield="evidence"]').value;
+    var kpi = card.querySelector('textarea[data-phase="' + p + '"][data-subfield="kpi"]').value;
+    var existingLabel = (src.phases && src.phases[p] && src.phases[p].phase) || (p + 1) + ' – Seed';
+    phases.push({ phase: existingLabel, evidence: ev, kpi: kpi });
+  }
+
+  setQuestionsStatus('Saving\u2026', '');
+  sbClient().from('questions').update({
+    question: questionVal,
+    guidance: guidanceVal,
+    phases:   phases,
+  }).eq('id', id).then(function(res) {
+    if (res.error) throw res.error;
+    // Merge into local state so cancel/re-open shows saved values
+    for (var i = 0; i < _questions.length; i++) {
+      if (String(_questions[i].id) === String(id)) {
+        _questions[i].question = questionVal;
+        _questions[i].guidance = guidanceVal;
+        _questions[i].phases   = phases;
+      }
+    }
+    setQuestionsStatus('Saved question ' + src.sort_order + '.', 'success');
+    setTimeout(function() { setQuestionsStatus('', ''); }, 2000);
+    collapseQuestion(card);
+  }).catch(function(e) {
+    setQuestionsStatus('Save failed: ' + (e.message || e), 'error');
   });
 }
 
@@ -2088,10 +2360,12 @@ document.getElementById('btn-signout').addEventListener('click', doSignOut);
 document.getElementById('btn-signout-home').addEventListener('click', doSignOut);
 document.getElementById('btn-signout-clients').addEventListener('click', doSignOut);
 document.getElementById('btn-signout-users').addEventListener('click', doSignOut);
+document.getElementById('btn-signout-questions').addEventListener('click', doSignOut);
 document.getElementById('btn-denied-signout').addEventListener('click', doSignOut);
 document.getElementById('btn-back-home').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-back-home-clients').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-back-home-users').addEventListener('click', function() { showScreen('screen-home'); });
+document.getElementById('btn-back-home-questions').addEventListener('click', function() { showScreen('screen-home'); });
 document.getElementById('btn-add-client').addEventListener('click', addClient);
 document.getElementById('new-client-name').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') addClient();
@@ -2103,9 +2377,10 @@ document.querySelectorAll('#screen-home .menu-tile').forEach(function(tile) {
   tile.addEventListener('click', function() {
     if (tile.getAttribute('data-disabled') === '1') return;
     var action = tile.getAttribute('data-action');
-    if (action === 'files')        openFilesManager();
-    else if (action === 'clients') openClientsAdmin();
-    else if (action === 'users')   openUsersAdmin();
+    if (action === 'files')          openFilesManager();
+    else if (action === 'clients')   openClientsAdmin();
+    else if (action === 'users')     openUsersAdmin();
+    else if (action === 'questions') openQuestionsAdmin();
   });
 });
 
