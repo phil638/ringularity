@@ -844,6 +844,42 @@ body {
   border-top: 1px dashed var(--rule);
 }
 
+/* ── User <-> Client assignment row inside a user card ── */
+.ua-row {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--rule);
+  font-size: 0.88rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.ua-label {
+  color: var(--muted);
+  font-weight: 600;
+  margin-right: 4px;
+}
+.ua-multi {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.ua-multi input { margin: 0; }
+.ua-empty { color: var(--muted); font-style: italic; }
+.ua-warn {
+  flex-basis: 100%;
+  font-size: 0.78rem;
+  color: #b47400;
+  background: #fff5e6;
+  border: 1px solid #f2dca4;
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin-bottom: 2px;
+}
+
 /* ── Growth steps stage badges ── */
 .gs-stage-badge {
   display: inline-block;
@@ -1913,15 +1949,29 @@ function setUsersStatus(msg, type) {
   el.className = 'status-msg' + (type ? ' ' + type : '');
 }
 
+var _allClientsForAssign = []; // [{id, name}] — for assignment dropdowns/checkboxes
+var _clientsByUser       = {}; // user_id -> array of {id, name}
+
 function loadUsers() {
-  return sbClient()
-    .from('profiles')
-    .select('id, email, display_name, role')
-    .order('role').order('display_name')
-    .then(function(res) {
-      if (res.error) throw res.error;
-      _users = res.data || [];
+  var sb = sbClient();
+  return Promise.all([
+    sb.from('profiles').select('id, email, display_name, role').order('role').order('display_name'),
+    sb.from('clients').select('id, name').order('name'),
+    sb.from('user_clients').select('user_id, client_id')
+  ]).then(function(results) {
+    if (results[0].error) throw results[0].error;
+    if (results[1].error) throw results[1].error;
+    if (results[2].error) throw results[2].error;
+    _users               = results[0].data || [];
+    _allClientsForAssign = results[1].data || [];
+    var byId = {};
+    _allClientsForAssign.forEach(function(c) { byId[c.id] = c; });
+    _clientsByUser = {};
+    (results[2].data || []).forEach(function(row) {
+      if (!_clientsByUser[row.user_id]) _clientsByUser[row.user_id] = [];
+      if (byId[row.client_id]) _clientsByUser[row.user_id].push(byId[row.client_id]);
     });
+  });
 }
 
 function renderUsers() {
@@ -1954,6 +2004,7 @@ function renderUsers() {
           +       '<button class="btn-sm danger" data-action="delete" data-id="' + escAttr(u.id) + '" data-name="' + escAttr(u.display_name || u.email) + '"' + (isSelf ? ' disabled title="You cannot delete yourself"' : '') + '>Delete</button>'
           +     '</div>'
           +   '</div>'
+          +   renderUserAssignmentRow(u)
           + '</div>';
   }
   container.innerHTML = html;
@@ -1972,6 +2023,109 @@ function renderUsers() {
     btn.addEventListener('click', function() {
       deleteUser(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
     });
+  });
+  container.querySelectorAll('select[data-action="assign-single"]').forEach(function(sel) {
+    sel.addEventListener('change', function() {
+      setSingleClientForUser(sel.getAttribute('data-user-id'), sel.value);
+    });
+  });
+  container.querySelectorAll('input[data-action="assign-multi"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      toggleUserClient(cb.getAttribute('data-user-id'), cb.getAttribute('data-client-id'), cb.checked, cb);
+    });
+  });
+}
+
+function renderUserAssignmentRow(u) {
+  if (u.role === 'admin') return '';
+  var assigned    = _clientsByUser[u.id] || [];
+  var assignedIds = {};
+  assigned.forEach(function(c) { assignedIds[c.id] = true; });
+
+  if (_allClientsForAssign.length === 0) {
+    return '<div class="ua-row"><span class="ua-label">Client assignment:</span>'
+         + '<span class="ua-empty">No clients configured yet \u2014 add them in the Clients admin.</span>'
+         + '</div>';
+  }
+
+  var out = '<div class="ua-row">';
+  if (u.role === 'client') {
+    var currentId = assigned.length ? assigned[0].id : '';
+    if (assigned.length > 1) {
+      out += '<div class="ua-warn">This user is currently linked to ' + assigned.length
+          +  ' clients. Selecting one below will remove the others.</div>';
+    }
+    out += '<label><span class="ua-label">Assigned client:</span>'
+        +  '<select class="role-select" data-action="assign-single" data-user-id="' + escAttr(u.id) + '">'
+        +  '<option value="">\u2014 none \u2014</option>';
+    for (var c = 0; c < _allClientsForAssign.length; c++) {
+      var cl = _allClientsForAssign[c];
+      out += '<option value="' + escAttr(cl.id) + '"' + (cl.id === currentId ? ' selected' : '') + '>'
+          +  esc(cl.name) + '</option>';
+    }
+    out += '</select></label>';
+  } else {
+    out += '<span class="ua-label">Client cluster:</span>';
+    for (var c2 = 0; c2 < _allClientsForAssign.length; c2++) {
+      var cl2     = _allClientsForAssign[c2];
+      var checked = assignedIds[cl2.id] ? ' checked' : '';
+      out += '<label class="ua-multi"><input type="checkbox" data-action="assign-multi" '
+          +  'data-user-id="' + escAttr(u.id) + '" data-client-id="' + escAttr(cl2.id) + '"'
+          +  checked + '/> ' + esc(cl2.name) + '</label>';
+    }
+  }
+  out += '</div>';
+  return out;
+}
+
+function setSingleClientForUser(userId, newClientId) {
+  var sb = sbClient();
+  setUsersStatus('Updating client assignment\u2026', '');
+  sb.from('user_clients').delete().eq('user_id', userId).then(function(delRes) {
+    if (delRes.error) throw delRes.error;
+    if (!newClientId) return { error: null };
+    return sb.from('user_clients').insert({ user_id: userId, client_id: newClientId });
+  }).then(function(insRes) {
+    if (insRes && insRes.error) throw insRes.error;
+    var newList = [];
+    if (newClientId) {
+      for (var i = 0; i < _allClientsForAssign.length; i++) {
+        if (_allClientsForAssign[i].id === newClientId) newList.push(_allClientsForAssign[i]);
+      }
+    }
+    _clientsByUser[userId] = newList;
+    setUsersStatus('Assignment saved.', 'success');
+    setTimeout(function() { setUsersStatus('', ''); }, 1500);
+    renderUsers();
+  }).catch(function(e) {
+    setUsersStatus('Assignment failed: ' + (e.message || e), 'error');
+    loadUsers().then(renderUsers);
+  });
+}
+
+function toggleUserClient(userId, clientId, checked, cbEl) {
+  var sb = sbClient();
+  var op = checked
+    ? sb.from('user_clients').insert({ user_id: userId, client_id: clientId })
+    : sb.from('user_clients').delete().eq('user_id', userId).eq('client_id', clientId);
+  op.then(function(res) {
+    if (res.error) throw res.error;
+    if (!_clientsByUser[userId]) _clientsByUser[userId] = [];
+    if (checked) {
+      for (var i = 0; i < _allClientsForAssign.length; i++) {
+        if (_allClientsForAssign[i].id === clientId) {
+          _clientsByUser[userId].push(_allClientsForAssign[i]);
+          break;
+        }
+      }
+    } else {
+      _clientsByUser[userId] = _clientsByUser[userId].filter(function(c) { return c.id !== clientId; });
+    }
+    setUsersStatus('Saved.', 'success');
+    setTimeout(function() { setUsersStatus('', ''); }, 1200);
+  }).catch(function(e) {
+    setUsersStatus((checked ? 'Assignment failed: ' : 'Unassignment failed: ') + (e.message || e), 'error');
+    cbEl.checked = !checked;
   });
 }
 
