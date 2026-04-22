@@ -1004,9 +1004,9 @@ body.rf-auth-state .progress-bar-wrap {
             <label class="res-form-label">Stage</label>
             <select id="ru-stage" class="res-form-select" disabled>
               <option value="">— Select subtopic first —</option>
-              <option value="2">2 - Growth</option>
-              <option value="3">3 - Maturity</option>
-              <option value="4">4 - Renewal</option>
+              <option value="2">2 – Root</option>
+              <option value="3">3 – Branch</option>
+              <option value="4">4 – Evergreen</option>
             </select>
           </div>
           <div>
@@ -1468,9 +1468,11 @@ async function ruUpload() {
   var ext = file.name.split('.').pop().toLowerCase();
   var fileType = RU_FILE_TYPES[ext] || ext;
 
-  // Build stage label (matches folder structure)
-  var stageLabels = {2:'2 - Growth', 3:'3 - Maturity', 4:'4 - Renewal'};
-  var stageLabel  = stageLabels[stage];
+  // Build stage label matching legacy Storage folder names.
+  // Folders will be renamed to Root/Branch/Evergreen in the growth-steps-to-DB PR
+  // (along with the auto-index SQL functions that parse these paths).
+  var stageFolderLabels = {2:'2 - Growth', 3:'3 - Maturity', 4:'4 - Renewal'};
+  var stageLabel  = stageFolderLabels[stage];
 
   // Build storage path
   var storagePath = system + '/' + subtopic + '/' + stageLabel + '/' + folder + '/' + file.name;
@@ -1531,7 +1533,7 @@ async function ruLoadList() {
   if (error) { el.innerHTML = '<p style="color:red;">Error: ' + error.message + '</p>'; return; }
   if (!data || !data.length) { el.innerHTML = '<p style="color:var(--muted);">No resources yet.</p>'; return; }
 
-  var stageNames = {2:'Growth', 3:'Maturity', 4:'Renewal'};
+  var stageNames = {2:'Root', 3:'Branch', 4:'Evergreen'};
   var rows = '';
   data.forEach(function(r) {
     rows += '<div class="ru-row">'
@@ -2010,10 +2012,10 @@ function finishSurvey() {
 // RESULTS
 // ════════════════════════════════════════════════
 function matInfo(pct) {
-  if (pct < 0.25) return { text: 'Germination', color: '#c0392b' };
-  if (pct < 0.50) return { text: 'Growth',      color: '#e67e22' };
-  if (pct < 0.75) return { text: 'Maturity',    color: '#2980b9' };
-  return              { text: 'Renewal',     color: '#27ae60' };
+  if (pct < 0.25) return { text: 'Seed',      color: '#c0392b' };
+  if (pct < 0.50) return { text: 'Root',      color: '#e67e22' };
+  if (pct < 0.75) return { text: 'Branch',    color: '#2980b9' };
+  return              { text: 'Evergreen', color: '#27ae60' };
 }
 
 function buildResults(assessment, version) {
@@ -2263,12 +2265,12 @@ function renderGrowthStepsScreen() {
     var gs   = getGrowthStep(qi2, ans);
 
     var stageLabel, stageCls;
-    var STAGE_NAMES = ['', 'Germination', 'Growth', 'Maturity', 'Renewal'];
+    var STAGE_NAMES = ['', 'Seed', 'Root', 'Branch', 'Evergreen'];
     if (!ans) {
       stageLabel = '<span class="gs-stage-line">Not answered</span>';
       stageCls = 'gs-stage-none';
     } else if (ans === 4) {
-      stageLabel = '<span class="gs-stage-line">Current Stage is <strong>4 – Renewal</strong></span>'
+      stageLabel = '<span class="gs-stage-line">Current Stage is <strong>4 – Evergreen</strong></span>'
                 + '<span class="gs-stage-line"><strong>You are at the highest stage</strong></span>';
       stageCls = 'gs-stage-done';
     } else {
@@ -2483,10 +2485,10 @@ async function checkAdminRole() {
   if (!currentUserId()) { _isAdmin = false; return false; }
   var res = await sbClient()
     .from('profiles')
-    .select('is_admin')
+    .select('role')
     .eq('id', currentUserId())
     .single();
-  _isAdmin = !!(res.data && res.data.is_admin);
+  _isAdmin = !!(res.data && res.data.role === 'admin');
   return _isAdmin;
 }
 
@@ -2569,6 +2571,16 @@ async function syncFromSupabase() {
 // ════════════════════════════════════════════════════════════════════════
 async function openAdmin() {
   if (!_isAdmin) { alert('Access denied.'); return; }
+  // Admin Console now lives at /admin.html — navigate there instead of showing
+  // the embedded screen-admin (which remains as unreachable dead code pending cleanup).
+  window.location.href = 'admin.html';
+  return;
+}
+
+// Legacy openAdmin body retained only so helper functions referenced below remain
+// syntactically attached. Not called. Remove together with the embedded screen-admin.
+async function _legacyOpenAdmin_unused() {
+  if (!_isAdmin) return;
   showScreen('screen-admin');
   document.getElementById('admin-content').innerHTML =
     '<div style="text-align:center;padding:40px;color:var(--muted);">Loading all assessments&#8230;</div>';
