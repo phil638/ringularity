@@ -1004,8 +1004,8 @@ body.rf-auth-state .progress-bar-wrap {
             <label class="res-form-label">Stage</label>
             <select id="ru-stage" class="res-form-select" disabled>
               <option value="">— Select subtopic first —</option>
-              <option value="2">2 – Root</option>
-              <option value="3">3 – Branch</option>
+              <option value="2">2 – Grounding</option>
+              <option value="3">3 – Branching</option>
               <option value="4">4 – Evergreen</option>
             </select>
           </div>
@@ -1533,7 +1533,7 @@ async function ruLoadList() {
   if (error) { el.innerHTML = '<p style="color:red;">Error: ' + error.message + '</p>'; return; }
   if (!data || !data.length) { el.innerHTML = '<p style="color:var(--muted);">No resources yet.</p>'; return; }
 
-  var stageNames = {2:'Root', 3:'Branch', 4:'Evergreen'};
+  var stageNames = {2:'Grounding', 3:'Branching', 4:'Evergreen'};
   var rows = '';
   data.forEach(function(r) {
     rows += '<div class="ru-row">'
@@ -2012,10 +2012,10 @@ function finishSurvey() {
 // RESULTS
 // ════════════════════════════════════════════════
 function matInfo(pct) {
-  if (pct < 0.25) return { text: 'Seed',      color: '#c0392b' };
-  if (pct < 0.50) return { text: 'Root',      color: '#e67e22' };
-  if (pct < 0.75) return { text: 'Branch',    color: '#2980b9' };
-  return              { text: 'Evergreen', color: '#27ae60' };
+  if (pct < 0.25) return { text: 'Seeding',   color: '#c0392b' };
+  if (pct < 0.50) return { text: 'Grounding', color: '#e67e22' };
+  if (pct < 0.75) return { text: 'Branching', color: '#2980b9' };
+  return              { text: 'Evergreen',  color: '#27ae60' };
 }
 
 function buildResults(assessment, version) {
@@ -2266,7 +2266,7 @@ function renderGrowthStepsScreen() {
     var gs   = getGrowthStep(qi2, ans);
 
     var stageLabel, stageCls;
-    var STAGE_NAMES = ['', 'Seed', 'Root', 'Branch', 'Evergreen'];
+    var STAGE_NAMES = ['', 'Seeding', 'Grounding', 'Branching', 'Evergreen'];
     if (!ans) {
       stageLabel = '<span class="gs-stage-line">Not answered</span>';
       stageCls = 'gs-stage-none';
