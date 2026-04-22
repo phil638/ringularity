@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us &ndash; Ringularity</title>
+<link rel="icon" type="image/jpeg" href="Tree_professional.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#101812;--gold:#b8924a;--gold-lt:#d4ac6e;--cream:#f5f2ec;--rule:rgba(184,146,74,0.25);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;background:var(--ink);color:var(--cream);font-family:'Jost',sans-serif;font-weight:300;overflow-x:hidden;}
+  /* Forest background + grain overlay */
+  body::before{content:'';position:fixed;inset:0;background:linear-gradient(to bottom,rgba(10,20,12,0.72) 0%,rgba(10,20,12,0.55) 40%,rgba(10,20,12,0.72) 100%),url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=85&fit=crop') center 30% / cover no-repeat;pointer-events:none;z-index:0;}
+  body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
+
+  .stage{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;}
+
+  .logo-wrap{position:relative;display:inline-block;opacity:0;animation:fade-in 1.2s ease forwards 0.3s;margin-bottom:40px;}
+  .logo-ring{position:absolute;inset:-24px;border-radius:16px;border:2px solid var(--rule);animation:ring-spin 30s linear infinite;pointer-events:none;}
+  .logo-ring::before{content:'';position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:var(--gold);animation:dot-spin 15s linear infinite;}
+  .logo-img{width:180px;height:180px;border-radius:8px;object-fit:contain;display:block;background:transparent;box-shadow:0 8px 40px rgba(0,0,0,0.5),0 0 80px rgba(184,146,74,0.12);position:relative;z-index:2;}
+
+  h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(2rem,5vw,3rem);color:var(--cream);margin-bottom:10px;letter-spacing:0.02em;opacity:0;animation:fade-up 1s ease forwards 0.7s;}
+  .subline{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(1.1rem,2.5vw,1.35rem);color:var(--gold-lt);margin-bottom:44px;opacity:0;animation:fade-up 1s ease forwards 0.95s;}
+  .msg{font-size:1rem;color:var(--cream);max-width:520px;margin-bottom:44px;line-height:1.65;opacity:0;animation:fade-up 1s ease forwards 1.15s;}
+  .divider{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 44px;opacity:0;animation:fade-in 1s ease forwards 1.25s;}
+
+  .back-link{display:inline-block;color:var(--gold-lt);text-decoration:none;font-family:'Jost',sans-serif;font-size:0.85rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;border:1px solid var(--rule);padding:13px 32px;border-radius:4px;transition:all 0.2s;opacity:0;animation:fade-up 1s ease forwards 1.35s;}
+  .back-link:hover{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+
+  @keyframes ring-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  @keyframes dot-spin{from{transform:translateX(-50%) rotate(0deg);}to{transform:translateX(-50%) rotate(-360deg);}}
+  @keyframes fade-in{to{opacity:1;}}
+  @keyframes fade-up{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+<main class="stage">
+  <div class="logo-wrap">
+    <div class="logo-ring"></div>
+    <img class="logo-img" src="Tree_professional.jpg" alt="Ringularity">
+  </div>
+  <h1>About Us</h1>
+  <div class="subline">Under construction</div>
+  <p class="msg">We&rsquo;re preparing something worthy of your attention. Check back shortly &mdash; in the meantime, you can explore the live Growth Steps Assessment.</p>
+  <div class="divider"></div>
+  <a class="back-link" href="/">&larr; Return home</a>
+</main>
+</body>
+</html>
