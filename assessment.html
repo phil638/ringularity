@@ -854,6 +854,10 @@ body.rf-auth-state .progress-bar-wrap {
         <input type="text" id="new-name" placeholder="e.g. Ringularity HQ &#8211; Q3 2026" maxlength="80">
       </div>
       <div class="field">
+        <label>Assessment Date *</label>
+        <input type="date" id="new-date">
+      </div>
+      <div class="field">
         <label>Assessor (optional)</label>
         <input type="text" id="new-assessor" placeholder="e.g. Jane Smith" maxlength="60">
       </div>
@@ -1625,6 +1629,13 @@ function setProgress(pct) {
 // ════════════════════════════════════════════════
 function showNewSetup() {
   populateNewSetupClientSelector();
+  // Default the assessment date to today, but leave it editable.
+  var dateEl = document.getElementById('new-date');
+  if (dateEl && !dateEl.value) {
+    var now = new Date();
+    var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+    dateEl.value = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  }
   showScreen('screen-new-setup');
 }
 
@@ -1709,9 +1720,19 @@ function startNew() {
     return;
   }
   nameEl.classList.remove('error');
+
+  var dateEl = document.getElementById('new-date');
+  var assessmentDate = (dateEl && dateEl.value) || '';
+  if (!assessmentDate) {
+    dateEl.classList.add('error');
+    dateEl.focus();
+    return;
+  }
+  dateEl.classList.remove('error');
+
   var assessor = document.getElementById('new-assessor').value.trim();
   var id = genId();
-  var rec = { id: id, name: name, assessor: assessor, clientId: clientId, clientName: clientName, createdAt: Date.now(), status: 'draft', versions: [] };
+  var rec = { id: id, name: name, assessor: assessor, assessmentDate: assessmentDate, clientId: clientId, clientName: clientName, createdAt: Date.now(), status: 'draft', versions: [] };
   dbUpsert(rec);
 
   S.activeId = id;
@@ -2606,7 +2627,8 @@ async function sbUpsert(rec) {
     updated_at: new Date().toISOString()
   };
   // Only send client_id if we have one — older records may not carry it.
-  if (rec.clientId) row.client_id = rec.clientId;
+  if (rec.clientId)      row.client_id       = rec.clientId;
+  if (rec.assessmentDate) row.assessment_date = rec.assessmentDate;
   var res = await sbClient().from('assessments').upsert(row, { onConflict: 'id' });
   if (res.error) console.warn('sbUpsert error:', res.error);
 }
