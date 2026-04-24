@@ -19,6 +19,14 @@ body::before{content:'';position:fixed;inset:0;background:linear-gradient(to bot
 body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
 .site-header,.ep-wrap,#auth-loading,#auth-error,#gate-block{position:relative;z-index:1;}
 .site-header{background:var(--ink);color:var(--paper);padding:14px 28px;border-bottom:3px solid var(--accent);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.logo-area{display:flex;align-items:center;gap:14px;cursor:pointer;text-decoration:none;}
+.logo-ring-wrap{position:relative;display:inline-block;}
+.logo-ring-wrap .logo-ring{position:absolute;inset:-6px;border-radius:10px;border:1.5px solid rgba(184,146,74,0.45);pointer-events:none;animation:hdr-spin-slow 30s linear infinite;}
+.logo-ring-wrap .logo-ring::before{content:'';position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#b8924a;animation:hdr-dot-spin 15s linear infinite;}
+@keyframes hdr-spin-slow{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes hdr-dot-spin{from{transform:translateX(-50%) rotate(0deg);}to{transform:translateX(-50%) rotate(-360deg);}}
+.logo-img{height:54px;width:auto;border-radius:8px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
+.logo-text{display:flex;flex-direction:column;}
 .logo-brand{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--paper);letter-spacing:-0.01em;}
 .logo-tag{font-size:0.68rem;color:rgba(248,246,241,0.5);letter-spacing:0.08em;text-transform:uppercase;}
 .hdr-links{display:flex;gap:18px;align-items:center;}
@@ -149,19 +157,39 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .ep-res-meta{font-size:0.72rem;color:var(--muted);margin-top:2px;}
 .ep-res-empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:0.86rem;line-height:1.6;}
 .ep-res-loading{text-align:center;padding:28px 16px;color:var(--muted);font-size:0.86rem;}
+/* ── Mon/Fri date picker ─────────────────────────────────────────────── */
+.dp-pop{position:absolute;z-index:1200;background:#fff;border:1px solid var(--rule);border-radius:8px;box-shadow:0 10px 28px rgba(26,26,46,0.22);padding:12px;width:262px;font-family:'DM Sans',sans-serif;color:var(--ink);}
+.dp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;}
+.dp-nav{background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--ink);width:28px;height:28px;border-radius:4px;line-height:1;}
+.dp-nav:hover{background:#f0ede5;}
+.dp-title{font-weight:700;font-size:0.92rem;font-family:'Playfair Display',serif;}
+.dp-subtitle{font-size:0.7rem;color:var(--muted);text-align:center;margin-bottom:6px;font-style:italic;}
+.dp-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
+.dp-dow>div{text-align:center;font-size:0.64rem;color:var(--muted);font-weight:700;letter-spacing:0.04em;padding:4px 0;text-transform:uppercase;}
+.dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.dp-cell{padding:7px 0;font-size:0.82rem;border:none;background:#fff;cursor:pointer;border-radius:4px;text-align:center;font-family:'DM Sans',sans-serif;color:var(--ink);}
+.dp-cell.dp-muted{color:#d4d2cc;background:#fafafa;cursor:not-allowed;pointer-events:none;}
+.dp-cell.dp-ok{background:#faf6ee;font-weight:600;}
+.dp-cell.dp-ok:hover{background:var(--accent);color:#fff;}
+.dp-cell.dp-selected{background:var(--ink);color:#fff;}
+.dp-blank{visibility:hidden;}
+#sched-start,#sched-end{cursor:pointer;background:#fff;}
 </style>
 </head>
 <body>
 
 <div class="site-header">
-  <div class="logo-area">
-    <div>
-      <div class="logo-brand">Ringularity</div>
-      <div class="logo-tag">Execution Plan</div>
+  <a class="logo-area" href="index.html" title="Back to Ringularity home">
+    <div class="logo-ring-wrap">
+      <div class="logo-ring"></div>
+      <img src="Tree_professional.jpg" class="logo-img" alt="Ringularity">
     </div>
-  </div>
+    <div class="logo-text">
+      <span class="logo-brand">Ringularity</span>
+      <span class="logo-tag">Execution Plan</span>
+    </div>
+  </a>
   <div class="hdr-links">
-    <a href="index.html">&larr; Home</a>
     <a href="#" id="back-to-plan">&larr; Back to Plan</a>
   </div>
 </div>
@@ -251,11 +279,11 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       </div>
       <div class="ep-sched-field">
         <label for="sched-start">Start Date <span style="font-weight:500;opacity:0.75;text-transform:none;letter-spacing:0;font-size:0.7rem;">(Mondays)</span></label>
-        <input id="sched-start" type="date">
+        <input id="sched-start" type="text" data-dp-weekday="1">
       </div>
       <div class="ep-sched-field">
         <label for="sched-end">End Date <span style="font-weight:500;opacity:0.75;text-transform:none;letter-spacing:0;font-size:0.7rem;">(Fridays)</span></label>
-        <input id="sched-end" type="date">
+        <input id="sched-end" type="text" data-dp-weekday="5">
       </div>
       <div class="ep-sched-hint">Start dates snap to the next Monday; end dates snap to the next Friday.</div>
       <div class="ep-sched-err" id="sched-err"></div>
@@ -371,6 +399,128 @@ function clampEndToStart(startStr, endStr) {
   if (!s || !e) return endStr;
   return e < s ? startStr : endStr;
 }
+
+// ── Mon/Fri date picker (matches implementation-plan.html) ───────────────────
+var _dpOpen = null;
+function dpEnsureHost() {
+  var h = document.getElementById('dp-host');
+  if (!h) { h = document.createElement('div'); h.id = 'dp-host'; document.body.appendChild(h); }
+  return h;
+}
+function dpBindInput(input) {
+  if (input.__dpBound) { dpSyncDisplay(input); return; }
+  input.__dpBound = true;
+  input.setAttribute('readonly', 'readonly');
+  var dow = input.getAttribute('data-dp-weekday');
+  input.setAttribute('placeholder', dow === '5' ? 'Pick a Friday' : 'Pick a Monday');
+  input.addEventListener('click', function() { if (!input.disabled) dpOpen(input); });
+  dpSyncDisplay(input);
+}
+function dpSyncDisplay(input) {
+  var iso = input.getAttribute('data-iso') || '';
+  input.value = iso ? dpFormatDisplay(iso) : '';
+}
+function dpFormatDisplay(iso) {
+  var d = parseISODate(iso); if (!d) return '';
+  var dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return dows[d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + months[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+}
+function dpOpen(input) {
+  dpClose();
+  var targetDow = parseInt(input.getAttribute('data-dp-weekday'), 10);
+  var iso = input.getAttribute('data-iso');
+  var seed = iso ? parseISODate(iso) : new Date();
+  var state = { input: input, targetDow: targetDow, viewYear: seed.getUTCFullYear(), viewMonth: seed.getUTCMonth(), selectedIso: iso || '' };
+  var pop = document.createElement('div');
+  pop.className = 'dp-pop';
+  pop.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+  dpEnsureHost().appendChild(pop);
+  _dpOpen = { state: state, pop: pop };
+  dpPosition(input, pop);
+  dpRender();
+  setTimeout(function() {
+    document.addEventListener('mousedown', dpOutside);
+    document.addEventListener('keydown', dpKey);
+    window.addEventListener('resize', dpReposition);
+    window.addEventListener('scroll', dpReposition, true);
+  }, 0);
+}
+function dpClose() {
+  if (!_dpOpen) return;
+  if (_dpOpen.pop && _dpOpen.pop.parentNode) _dpOpen.pop.parentNode.removeChild(_dpOpen.pop);
+  document.removeEventListener('mousedown', dpOutside);
+  document.removeEventListener('keydown', dpKey);
+  window.removeEventListener('resize', dpReposition);
+  window.removeEventListener('scroll', dpReposition, true);
+  _dpOpen = null;
+}
+function dpOutside(e) {
+  if (!_dpOpen) return;
+  if (_dpOpen.pop.contains(e.target)) return;
+  if (_dpOpen.state.input === e.target) return;
+  dpClose();
+}
+function dpKey(e) { if (e.key === 'Escape') dpClose(); }
+function dpReposition() { if (_dpOpen) dpPosition(_dpOpen.state.input, _dpOpen.pop); }
+function dpPosition(input, pop) {
+  var r = input.getBoundingClientRect();
+  var sx = window.scrollX || window.pageXOffset;
+  var sy = window.scrollY || window.pageYOffset;
+  pop.style.left = (r.left + sx) + 'px';
+  pop.style.top  = (r.bottom + sy + 4) + 'px';
+}
+function dpRender() {
+  var s = _dpOpen.state, p = _dpOpen.pop;
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var firstOfMonth = new Date(Date.UTC(s.viewYear, s.viewMonth, 1));
+  var daysInMonth = new Date(Date.UTC(s.viewYear, s.viewMonth + 1, 0)).getUTCDate();
+  var firstDow = firstOfMonth.getUTCDay();
+  var leadingBlanks = (firstDow + 6) % 7;
+  var subtitle = s.targetDow === 5 ? 'Only Fridays are selectable' : 'Only Mondays are selectable';
+  var html = '<div class="dp-hdr">'
+           +   '<button type="button" class="dp-nav" data-dir="-1" aria-label="Previous month">&lsaquo;</button>'
+           +   '<div class="dp-title">' + MONTHS[s.viewMonth] + ' ' + s.viewYear + '</div>'
+           +   '<button type="button" class="dp-nav" data-dir="1" aria-label="Next month">&rsaquo;</button>'
+           + '</div>'
+           + '<div class="dp-subtitle">' + subtitle + '</div>'
+           + '<div class="dp-dow"><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div></div>'
+           + '<div class="dp-grid">';
+  for (var b = 0; b < leadingBlanks; b++) html += '<div class="dp-cell dp-blank"></div>';
+  for (var day = 1; day <= daysInMonth; day++) {
+    var d = new Date(Date.UTC(s.viewYear, s.viewMonth, day));
+    var dow = d.getUTCDay();
+    var iso = fmtISODate(d);
+    var valid = dow === s.targetDow;
+    var sel = valid && s.selectedIso === iso;
+    var cls = 'dp-cell' + (valid ? ' dp-ok' : ' dp-muted') + (sel ? ' dp-selected' : '');
+    html += '<button type="button" class="' + cls + '" data-iso="' + iso + '"' + (valid ? '' : ' disabled') + '>' + day + '</button>';
+  }
+  html += '</div>';
+  p.innerHTML = html;
+  p.querySelectorAll('.dp-nav').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var dir = parseInt(btn.getAttribute('data-dir'), 10);
+      s.viewMonth += dir;
+      if (s.viewMonth < 0)  { s.viewMonth = 11; s.viewYear--; }
+      if (s.viewMonth > 11) { s.viewMonth = 0;  s.viewYear++; }
+      dpRender();
+    });
+  });
+  p.querySelectorAll('.dp-cell[data-iso]:not([disabled])').forEach(function(cell) {
+    cell.addEventListener('click', function() { dpSelect(cell.getAttribute('data-iso')); });
+  });
+}
+function dpSelect(iso) {
+  if (!_dpOpen) return;
+  var input = _dpOpen.state.input;
+  input.setAttribute('data-iso', iso);
+  dpSyncDisplay(input);
+  dpClose();
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+function dpSetValue(input, iso) { input.setAttribute('data-iso', iso || ''); dpSyncDisplay(input); }
+function dpGetValue(input) { return input.getAttribute('data-iso') || ''; }
 
 function planHref()    { return 'implementation-plan.html?assessmentId=' + encodeURIComponent(_assessmentId || ''); }
 
@@ -738,8 +888,12 @@ function openSchedModal(qIdx) {
   var q  = _questions[qIdx];
   document.getElementById('sched-sub').textContent = q.subtopic + ' \u00B7 ' + q.system;
   document.getElementById('sched-owner').value = it.owner || '';
-  document.getElementById('sched-start').value = it.start_date || '';
-  document.getElementById('sched-end').value   = it.end_date || '';
+  var startEl = document.getElementById('sched-start');
+  var endEl   = document.getElementById('sched-end');
+  dpSetValue(startEl, it.start_date || '');
+  dpSetValue(endEl,   it.end_date   || '');
+  dpBindInput(startEl);
+  dpBindInput(endEl);
   document.getElementById('sched-err').textContent = '';
   document.getElementById('sched-modal').classList.add('open');
   setTimeout(function() { document.getElementById('sched-owner').focus(); }, 30);
@@ -755,8 +909,8 @@ document.getElementById('sched-modal').addEventListener('click', function(e) {
 document.getElementById('sched-save').addEventListener('click', function() {
   if (_schedQ == null) return;
   var owner = document.getElementById('sched-owner').value.trim();
-  var startRaw = document.getElementById('sched-start').value;
-  var endRaw   = document.getElementById('sched-end').value;
+  var startRaw = dpGetValue(document.getElementById('sched-start'));
+  var endRaw   = dpGetValue(document.getElementById('sched-end'));
   var err = document.getElementById('sched-err');
   err.textContent = '';
   if (!owner) { err.textContent = 'Owner is required.'; return; }

@@ -25,7 +25,7 @@ body.rf-auth-state .screen .lp-wrap,body.rf-auth-state .screen .sub-wrap{backgro
 .logo-ring-wrap .logo-ring::before{content:'';position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#b8924a;animation:hdr-dot-spin 15s linear infinite;}
 @keyframes hdr-spin-slow{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 @keyframes hdr-dot-spin{from{transform:translateX(-50%) rotate(0deg);}to{transform:translateX(-50%) rotate(-360deg);}}
-.logo-img{height:54px;width:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
+.logo-img{height:54px;width:auto;border-radius:8px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
 .logo-text{display:flex;flex-direction:column;}
 .logo-brand{font-family:'Playfair Display',serif;font-size:1.45rem;font-weight:700;color:var(--paper);letter-spacing:-0.01em;}
 .logo-tagline{font-size:0.7rem;color:rgba(248,246,241,0.5);letter-spacing:0.08em;text-transform:uppercase;}
@@ -37,7 +37,7 @@ body.rf-auth-state .screen .lp-wrap,body.rf-auth-state .screen .sub-wrap{backgro
 .screen{display:none;}.screen.active{display:block;}
 /* LANDING */
 .lp-wrap{max-width:820px;margin:0 auto;padding:56px 24px 80px;text-align:center;}
-.lp-logo{height:130px;width:auto;margin-bottom:22px;filter:drop-shadow(0 4px 20px rgba(200,129,58,0.3));}
+.lp-logo{height:130px;width:auto;border-radius:8px;margin-bottom:22px;filter:drop-shadow(0 4px 20px rgba(200,129,58,0.3));}
 .lp-title{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:700;color:var(--ink);margin-bottom:10px;line-height:1.2;}
 .lp-sub{font-size:0.95rem;color:var(--muted);max-width:480px;margin:0 auto 44px;}
 .lp-user-bar{font-size:0.85rem;color:var(--ink);margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(200,129,58,0.08);border:1px solid rgba(200,129,58,0.2);border-radius:20px;padding:6px 16px;width:fit-content;margin-left:auto;margin-right:auto;}
@@ -70,7 +70,8 @@ body.rf-auth-state .screen .lp-wrap,body.rf-auth-state .screen .sub-wrap{backgro
 .past-list{display:flex;flex-direction:column;gap:12px;}
 .past-item{background:#fff;border:1px solid var(--rule);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--card-shadow);}
 .pi-info{flex:1;min-width:0;}
-.pi-name{font-weight:600;font-size:0.93rem;}
+.pi-name{font-family:'Playfair Display',serif;font-weight:700;font-size:1.1rem;color:var(--ink);line-height:1.2;}
+.pi-assess{font-size:0.84rem;color:var(--ink);margin-top:4px;font-weight:500;}
 .pi-meta{font-size:0.75rem;color:var(--muted);margin-top:2px;}
 .pi-score{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--accent);min-width:50px;text-align:center;}
 .pi-score small{display:block;font-size:0.62rem;font-family:'DM Sans',sans-serif;color:var(--muted);font-weight:400;}
@@ -1795,16 +1796,17 @@ function renderPastList() {
     var updated = latest ? fmtDate(latest.completedAt) : created;
     var vcount = a.versions.length;
     var draftTag = a.status === 'draft' ? ' <span style="font-size:0.68rem;color:#e67e22;font-weight:600">[Draft]</span>' : '';
+    var clientName = resolveClientName(a);
     html += '<div class="past-item">'
           + '<div class="pi-info">'
-          + '<div class="pi-name">' + esc(a.name)
+          + '<div class="pi-name">' + esc(clientName || 'Unassigned') + '</div>'
+          + '<div class="pi-assess">' + esc(a.name)
           + (a.updateNum ? ' <span class="update-badge">Update ' + a.updateNum + '</span>' : '')
           + draftTag + '</div>'
           + (a.baseName && a.baseName !== a.name ? '<div class="pi-family">&#8627; ' + esc(a.baseName) + '</div>' : '')
           + '<div class="pi-meta">Created ' + created + ' &middot; Updated ' + updated
           + ' &middot; ' + vcount + ' version' + (vcount !== 1 ? 's' : '')
           + (a.assessor ? ' &middot; ' + esc(a.assessor) : '') + '</div>'
-         
           + '</div>'
           + '<div class="pi-score">' + score + '<small>/ ' + MAX_SCORE + '</small></div>'
           + '<div class="pi-actions">'
@@ -2592,22 +2594,40 @@ async function loadAvailableClients() {
   _availableClients = res.data || [];
 }
 
+// Resolve the display name for an assessment's client. Prefers the fresh
+// lookup against _availableClients; falls back to any clientName already
+// embedded in the record (helps when admins see clients outside their own
+// client list and when _availableClients hasn't loaded yet).
+function resolveClientName(rec) {
+  if (!rec) return '';
+  var id = rec.clientId || rec.client_id;
+  if (id && _availableClients && _availableClients.length) {
+    for (var i = 0; i < _availableClients.length; i++) {
+      if (_availableClients[i].id === id) return _availableClients[i].name;
+    }
+  }
+  return rec.clientName || '';
+}
+
 // ════════════════════════════════════════════════════════════════════════
 // DATABASE — Supabase-backed, localStorage-cached
 // ════════════════════════════════════════════════════════════════════════
 
-// ── Fetch this user's assessments ────────────────────────────────────────────
+// ── Fetch assessments visible to this user ───────────────────────────────────
+// RLS on `assessments` returns: all rows for admins, rows whose client_id is
+// linked via user_clients for consultants/clients. We deliberately do NOT add
+// a user_id filter here — that would reduce visibility below what RLS grants.
 async function sbFetchOwn() {
   if (!currentUserId()) return [];
   var res = await sbClient()
     .from('assessments')
-    .select('id, data')
-    .eq('user_id', currentUserId())
+    .select('id, data, client_id')
     .order('created_at', { ascending: true });
   if (res.error) { console.warn('sbFetchOwn error:', res.error); return []; }
   return (res.data || []).map(function(row) {
     var rec = JSON.parse(row.data);
     rec.id = row.id;
+    if (row.client_id && !rec.clientId) rec.clientId = row.client_id;
     return rec;
   });
 }
