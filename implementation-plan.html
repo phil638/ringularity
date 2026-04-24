@@ -3,83 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ringularity &ndash; Implementation Planner</title>
+<title>Ringularity &ndash; Implementation Plan</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#1a1a2e;--paper:#f8f6f1;--accent:#c8813a;--accent2:#2d6a4f;--muted:#6b6b7a;--rule:#e0ddd6;--seeding:#c0392b;--grounding:#e67e22;--branching:#2980b9;--evergreen:#27ae60;}
+:root{--ink:#1a1a2e;--paper:#f8f6f1;--accent:#c8813a;--accent2:#2d6a4f;--muted:#6b6b7a;--rule:#e0ddd6;--seeding:#c0392b;--grounding:#e67e22;--branching:#2980b9;--evergreen:#27ae60;--np-bg:#e0ddd6;--np-fg:#555;--pl-bg:#2d6a4f;--pl-fg:#fff;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:#101812;color:var(--ink);font-size:15px;line-height:1.6;min-height:100vh;position:relative;}
 body::before{content:'';position:fixed;inset:0;background:linear-gradient(to bottom,rgba(10,20,12,0.72) 0%,rgba(10,20,12,0.55) 40%,rgba(10,20,12,0.72) 100%),url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=85&fit=crop') center 30% / cover no-repeat;pointer-events:none;z-index:0;}
 body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
-.site-header,.pl-wrap,#auth-loading,#auth-error{position:relative;z-index:1;}
+.site-header,.ip-wrap,#auth-loading,#auth-error,#gate-block{position:relative;z-index:1;}
 .site-header{background:var(--ink);color:var(--paper);padding:14px 28px;border-bottom:3px solid var(--accent);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
 .logo-area{display:flex;align-items:center;gap:10px;}
 .logo-brand{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--paper);letter-spacing:-0.01em;}
 .logo-tag{font-size:0.68rem;color:rgba(248,246,241,0.5);letter-spacing:0.08em;text-transform:uppercase;}
 .hdr-links{display:flex;gap:18px;align-items:center;}
-.hdr-links a{color:var(--accent);text-decoration:none;font-size:0.82rem;font-weight:500;}
+.hdr-links a{color:var(--accent);text-decoration:none;font-size:0.82rem;font-weight:500;cursor:pointer;}
 .hdr-links a:hover{text-decoration:underline;}
-#auth-loading,#auth-error{color:var(--paper);text-align:center;padding:80px 20px;font-size:1rem;}
+#auth-loading,#auth-error,#gate-block{color:var(--paper);text-align:center;padding:80px 20px;font-size:1rem;}
 #auth-error{color:#f66;}
-.pl-wrap{max-width:1100px;margin:28px auto 40px;background:var(--paper);border-radius:12px;padding:30px 34px 44px;box-shadow:0 10px 40px rgba(0,0,0,0.35);}
-.pl-title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
-.pl-title{font-family:'Playfair Display',serif;font-size:1.8rem;line-height:1.1;}
-.pl-a-name{font-family:'Playfair Display',serif;color:var(--accent);font-size:1rem;margin-top:2px;}
-.pl-save-status{font-size:0.78rem;color:var(--muted);min-height:1em;}
-.pl-save-status.ok{color:var(--accent2);}
-.pl-save-status.err{color:#c0392b;}
-.pl-legend{background:rgba(200,129,58,0.06);border-left:3px solid var(--accent);padding:11px 14px;font-size:0.84rem;color:var(--ink);margin:22px 0 24px;border-radius:0 4px 4px 0;}
-.pl-legend strong{color:var(--accent);}
-.pl-sys-block{margin-bottom:26px;}
-.pl-sys-hdr{background:var(--ink);color:var(--paper);padding:9px 16px;display:flex;gap:12px;align-items:center;margin-bottom:8px;border-radius:6px;}
-.pl-sys-num{font-size:0.7rem;color:rgba(248,246,241,0.5);letter-spacing:0.08em;text-transform:uppercase;}
-.pl-sys-name{font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;}
-.pl-row{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);transition:opacity 0.15s,background 0.15s;}
-.pl-row.pl-muted{opacity:0.45;}
-.pl-row.pl-muted:hover{opacity:0.75;}
-.pl-row.pl-row-top{opacity:0.55;background:#f4f7f4;}
-.pl-row-main{flex:1;min-width:0;display:grid;grid-template-columns:200px 1fr 230px;gap:14px;align-items:center;}
-@media(max-width:900px){.pl-row{flex-direction:column;align-items:stretch;}.pl-row-main{grid-template-columns:1fr;gap:6px;}.pl-actions{justify-content:flex-start;}.pl-stage-area{justify-content:flex-start;}}
-.pl-sub-name{font-weight:600;font-size:0.92rem;color:var(--ink);}
-.pl-step-title{font-family:'Playfair Display',serif;font-size:0.95rem;color:var(--ink);line-height:1.3;}
-.pl-step-title em{color:var(--muted);font-style:italic;}
-.pl-stage-area{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
-.pl-stage-chip{display:inline-block;padding:3px 9px;border-radius:12px;font-size:0.7rem;font-weight:600;color:#fff;white-space:nowrap;}
-.pl-stage-1{background:var(--seeding);}
-.pl-stage-2{background:var(--grounding);}
-.pl-stage-3{background:var(--branching);}
-.pl-stage-4{background:var(--evergreen);}
-.pl-stage-next{background:var(--accent2);}
-.pl-stage-na{background:#ccc;color:#555;}
-.pl-stage-arr{font-size:0.9rem;color:var(--muted);}
-.pl-actions{display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
-.pl-incl{font-size:0.82rem;display:inline-flex;align-items:center;gap:5px;cursor:pointer;user-select:none;color:var(--ink);font-weight:500;}
-.pl-incl input{cursor:pointer;}
-.pl-prio-sel{font-size:0.8rem;padding:5px 7px;border:1px solid var(--rule);border-radius:4px;background:#fff;color:var(--ink);font-family:'DM Sans',sans-serif;}
-.pl-prio-sel:disabled{opacity:0.4;cursor:not-allowed;background:#f5f5f5;}
-.pl-no-gs{font-size:0.78rem;color:var(--muted);font-style:italic;}
+#gate-block a{color:var(--accent);text-decoration:underline;margin-top:14px;display:inline-block;}
+.ip-wrap{max-width:1180px;margin:28px auto 40px;background:var(--paper);border-radius:12px;padding:30px 34px 44px;box-shadow:0 10px 40px rgba(0,0,0,0.35);}
+.ip-title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+.ip-title{font-family:'Playfair Display',serif;font-size:1.8rem;line-height:1.1;}
+.ip-a-name{font-family:'Playfair Display',serif;color:var(--accent);font-size:1rem;margin-top:2px;}
+.ip-save-status{font-size:0.78rem;color:var(--muted);min-height:1em;}
+.ip-save-status.ok{color:var(--accent2);}
+.ip-save-status.err{color:#c0392b;}
+.ip-intro{background:rgba(45,106,79,0.06);border-left:3px solid var(--accent2);padding:11px 14px;font-size:0.84rem;color:var(--ink);margin:22px 0 24px;border-radius:0 4px 4px 0;}
+.ip-group{margin-bottom:28px;}
+.ip-group-hdr{display:flex;align-items:baseline;gap:14px;padding:10px 16px;margin-bottom:10px;background:var(--ink);color:var(--paper);border-radius:6px;}
+.ip-group-prio{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--accent);}
+.ip-group-count{font-size:0.75rem;color:rgba(248,246,241,0.6);letter-spacing:0.05em;text-transform:uppercase;}
+.ip-row{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:16px 18px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.ip-row-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.ip-sys-chip{display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.7rem;font-weight:700;color:#fff;white-space:nowrap;flex-shrink:0;letter-spacing:0.02em;}
+.ip-row-title{flex:1;min-width:0;}
+.ip-sub{font-size:0.78rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.ip-step{font-family:'Playfair Display',serif;font-size:1.02rem;color:var(--ink);line-height:1.3;}
+.ip-row-detail{flex-shrink:0;}
+.ip-row-body{display:grid;grid-template-columns:auto 1fr;gap:14px 18px;align-items:center;}
+@media(max-width:720px){.ip-row-body{grid-template-columns:1fr;}}
+.ip-status{display:flex;gap:0;align-items:center;border:1px solid var(--rule);border-radius:6px;overflow:hidden;flex-shrink:0;}
+.ip-status-btn{padding:7px 14px;font-size:0.82rem;font-family:'DM Sans',sans-serif;font-weight:600;border:none;background:#fff;color:var(--muted);cursor:pointer;transition:all 0.15s;border-right:1px solid var(--rule);}
+.ip-status-btn:last-child{border-right:none;}
+.ip-status-btn:hover{background:#f5f2ec;}
+.ip-status-btn.active.np{background:var(--np-bg);color:var(--np-fg);}
+.ip-status-btn.active.pl{background:var(--pl-bg);color:var(--pl-fg);}
+.ip-fields{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;}
+@media(max-width:720px){.ip-fields{grid-template-columns:1fr;}}
+.ip-field{display:flex;flex-direction:column;gap:3px;}
+.ip-field label{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
+.ip-field input{padding:7px 10px;border:1px solid var(--rule);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.86rem;color:var(--ink);background:#fff;}
+.ip-field input:focus{outline:none;border-color:var(--ink);}
+.ip-field input:disabled{background:#f5f5f5;color:#aaa;cursor:not-allowed;}
 .btn{padding:6px 14px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;border:1.5px solid transparent;background:var(--ink);color:var(--paper);transition:all 0.15s;}
 .btn:hover{filter:brightness(1.1);}
 .btn-secondary{background:transparent;color:var(--ink);border-color:var(--rule);}
 .btn-secondary:hover{border-color:var(--ink);background:#fff;}
 .btn-sm{padding:4px 11px;font-size:0.76rem;}
+.ip-footer{margin-top:30px;padding-top:22px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.ip-footer .btn{padding:9px 20px;font-weight:600;}
 .modal-ov{position:fixed;inset:0;background:rgba(26,26,46,0.55);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity 0.2s;}
 .modal-ov.open{opacity:1;pointer-events:auto;}
 .modal{background:#fff;border-radius:8px;padding:26px;width:92%;max-width:640px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(26,26,46,0.4);transform:translateY(8px);transition:transform 0.2s;}
 .modal-ov.open .modal{transform:translateY(0);}
-.pl-dmod-sub{font-size:0.7rem;color:var(--muted);margin-bottom:4px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
-.pl-dmod-title{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--ink);margin-bottom:18px;line-height:1.25;}
-.pl-dmod-sec{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--rule);}
-.pl-dmod-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
-.pl-dmod-lbl{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
-.pl-dmod-val{font-size:0.88rem;color:var(--ink);white-space:pre-line;line-height:1.55;}
+.ip-dmod-sub{font-size:0.7rem;color:var(--muted);margin-bottom:4px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+.ip-dmod-title{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--ink);margin-bottom:18px;line-height:1.25;}
+.ip-dmod-sec{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--rule);}
+.ip-dmod-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.ip-dmod-lbl{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.ip-dmod-val{font-size:0.88rem;color:var(--ink);white-space:pre-line;line-height:1.55;}
 .modal-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);}
-.pl-gate{margin-top:30px;padding-top:22px;border-top:1px solid var(--rule);text-align:center;}
-.pl-gate .btn{padding:10px 24px;font-size:0.92rem;font-weight:600;}
-.pl-gate .btn[disabled]{cursor:not-allowed;opacity:0.6;}
-.btn-accent{background:var(--accent);color:#fff;border-color:var(--accent);}
-.btn-accent:hover{background:#b57232;border-color:#b57232;}
-.pl-gate-hint{font-size:0.8rem;color:var(--muted);margin-top:8px;min-height:1.1em;font-style:italic;}
 </style>
 </head>
 <body>
@@ -88,34 +82,37 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
   <div class="logo-area">
     <div>
       <div class="logo-brand">Ringularity</div>
-      <div class="logo-tag">Implementation Planner</div>
+      <div class="logo-tag">Implementation Plan</div>
     </div>
   </div>
   <div class="hdr-links">
     <a href="index.html">&larr; Home</a>
-    <a href="#" id="back-to-assessment">&larr; Back to Assessment</a>
+    <a href="#" id="back-to-planner">&larr; Back to Planner</a>
   </div>
 </div>
 
-<div id="auth-loading">Loading planner&hellip;</div>
+<div id="auth-loading">Loading plan&hellip;</div>
 <div id="auth-error" style="display:none;"></div>
+<div id="gate-block" style="display:none;">
+  <div id="gate-block-msg"></div>
+</div>
 
-<div id="planner-main" style="display:none;">
-  <div class="pl-wrap">
-    <div class="pl-title-row">
+<div id="plan-main" style="display:none;">
+  <div class="ip-wrap">
+    <div class="ip-title-row">
       <div>
-        <h1 class="pl-title">Implementation Planner</h1>
-        <div class="pl-a-name" id="pl-a-name">&mdash;</div>
+        <h1 class="ip-title">Implementation Plan</h1>
+        <div class="ip-a-name" id="ip-a-name">&mdash;</div>
       </div>
-      <div class="pl-save-status" id="pl-save-status"></div>
+      <div class="ip-save-status" id="ip-save-status"></div>
     </div>
-    <div class="pl-legend">
-      <strong>Priority sub-themes</strong> are highlighted &mdash; they scored at the lowest stage in this assessment and should be addressed first. You can override by excluding or including any sub-theme, and assign a Priority 1&ndash;3 to items included in your plan.
+    <div class="ip-intro">
+      Your selected growth steps, grouped by priority. Switch a row to <strong>Planned</strong> to set an owner and target dates. Back to the planner anytime to adjust selections.
     </div>
-    <div id="planner-list"></div>
-    <div class="pl-gate">
-      <button class="btn btn-secondary" id="open-plan-btn" disabled onclick="openPlan()">View Implementation Plan &rarr;</button>
-      <div class="pl-gate-hint" id="open-plan-hint"></div>
+    <div id="plan-groups"></div>
+    <div class="ip-footer">
+      <a href="#" class="btn btn-secondary" id="footer-back">&larr; Back to Planner</a>
+      <span class="ip-save-status" id="ip-save-status-foot"></span>
     </div>
   </div>
 </div>
@@ -123,11 +120,11 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 <!-- DETAIL MODAL -->
 <div class="modal-ov" id="detail-modal">
   <div class="modal">
-    <div class="pl-dmod-sub" id="pl-dmod-sub">&mdash;</div>
-    <div class="pl-dmod-title" id="pl-dmod-title">&mdash;</div>
-    <div id="pl-dmod-body"></div>
+    <div class="ip-dmod-sub" id="ip-dmod-sub">&mdash;</div>
+    <div class="ip-dmod-title" id="ip-dmod-title">&mdash;</div>
+    <div id="ip-dmod-body"></div>
     <div class="modal-acts">
-      <button class="btn btn-secondary" id="pl-dmod-close">Close</button>
+      <button class="btn btn-secondary" id="ip-dmod-close">Close</button>
     </div>
   </div>
 </div>
@@ -146,19 +143,22 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 // ── Config ────────────────────────────────────────────────────────────────────
 var SUPABASE_URL  = 'https://zxrxjnaivfeveulajllj.supabase.co';
 var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4cnhqbmFpdmZldmV1bGFqbGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwOTI2MzIsImV4cCI6MjA4NzY2ODYzMn0.l31A7-zHxV5zCYLVyUws7fmp1STWoe4Ecw7mhqcw-mo';
-var STAGE_NAMES = ['', 'Seeding', 'Grounding', 'Branching', 'Evergreen'];
-var SYS_COLORS  = ['#4a7c9e', '#b8924a', '#7c6f9e', '#4a7c6f', '#8a6f4a'];
+// Colour per system — keep in sync with implementation-planner.html and assessment.html.
+var SYS_COLORS = {
+  'Strategic Direction & Execution':                '#4a7c9e',
+  'Performance Improvement & Tangible Results':     '#b8924a',
+  'Leadership, Mindsets & Culture':                 '#7c6f9e',
+  'Process Excellence & Systems Thinking':          '#4a7c6f',
+  'Organisational Agility & Continuous Innovation': '#8a6f4a'
+};
 
 // ── State ─────────────────────────────────────────────────────────────────────
 var _sb = null;
 var _userId = null;
 var _assessmentId = null;
-var _assessmentRec = null;
 var _questions = [];
 var _growthSteps = [];
-var _answers = [];
 var _planItems = [];
-var _minStage = null;
 var _saveTimer = null;
 
 function sb() {
@@ -181,6 +181,10 @@ function getUrlParam(name) {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
+function plannerHref() {
+  return 'implementation-planner.html?assessmentId=' + encodeURIComponent(_assessmentId || '');
+}
+
 function showError(msg) {
   document.getElementById('auth-loading').style.display = 'none';
   var el = document.getElementById('auth-error');
@@ -188,17 +192,29 @@ function showError(msg) {
   el.textContent = msg;
 }
 
+function showGateBlock(msg) {
+  document.getElementById('auth-loading').style.display = 'none';
+  var el = document.getElementById('gate-block');
+  document.getElementById('gate-block-msg').innerHTML =
+    esc(msg) + '<br><a href="' + plannerHref() + '">&larr; Back to the planner</a>';
+  el.style.display = 'block';
+}
+
 function setSaveStatus(text, cls) {
-  var el = document.getElementById('pl-save-status');
-  el.textContent = text || '';
-  el.className = 'pl-save-status' + (cls ? ' ' + cls : '');
+  var classes = 'ip-save-status' + (cls ? ' ' + cls : '');
+  ['ip-save-status', 'ip-save-status-foot'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = classes;
+  });
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 async function boot() {
   _assessmentId = getUrlParam('assessmentId');
   if (!_assessmentId) {
-    showError('No assessment specified. Please open this page from the Growth Steps overview.');
+    showError('No assessment specified. Please open this page from the planner.');
     return;
   }
 
@@ -209,27 +225,33 @@ async function boot() {
   }
   _userId = sess.data.session.user.id;
 
-  // Back-to-assessment: prefer history (user clicked through from the growth-steps
-  // screen), fall back to the assessment landing if there's no referrer.
-  var backLink = document.getElementById('back-to-assessment');
-  backLink.addEventListener('click', function(e) {
-    e.preventDefault();
-    if (document.referrer && document.referrer.indexOf('assessment.html') !== -1) {
-      history.back();
-    } else {
-      window.location.href = 'assessment.html';
-    }
-  });
+  // Wire back-to-planner links
+  document.getElementById('back-to-planner').href = plannerHref();
+  document.getElementById('footer-back').href = plannerHref();
 
   try {
     await loadAll();
-    render();
-    document.getElementById('auth-loading').style.display = 'none';
-    document.getElementById('planner-main').style.display = 'block';
   } catch (e) {
     console.error(e);
-    showError('Failed to load planner: ' + (e && e.message ? e.message : e));
+    showError('Failed to load plan: ' + (e && e.message ? e.message : e));
+    return;
   }
+
+  // Gate: every included item must carry a priority 1/2/3, and at least one included.
+  var included = _planItems.filter(function(it) { return it.included; });
+  if (!included.length) {
+    showGateBlock('No sub-themes have been included yet.');
+    return;
+  }
+  var missing = included.filter(function(it) { return it.priority !== 1 && it.priority !== 2 && it.priority !== 3; });
+  if (missing.length) {
+    showGateBlock('Some included sub-themes are missing a priority. Set a priority for every included item before opening the plan.');
+    return;
+  }
+
+  render();
+  document.getElementById('auth-loading').style.display = 'none';
+  document.getElementById('plan-main').style.display = 'block';
 }
 
 // ── Load everything in parallel ───────────────────────────────────────────────
@@ -241,89 +263,44 @@ async function loadAll() {
     sb().from('implementation_plans').select('items').eq('assessment_id', _assessmentId).maybeSingle()
   ]);
   var qRes = results[0], gsRes = results[1], aRes = results[2], pRes = results[3];
-
   if (qRes.error)  throw qRes.error;
   if (gsRes.error) throw gsRes.error;
   if (aRes.error)  throw aRes.error;
   if (pRes.error)  throw pRes.error;
 
-  _questions = qRes.data || [];
+  _questions   = qRes.data || [];
   _growthSteps = gsRes.data || [];
 
-  _assessmentRec = JSON.parse(aRes.data.data);
-  var versions = _assessmentRec.versions || [];
-  var latest = versions.length ? versions[versions.length - 1] : null;
-  _answers = latest && latest.answers ? latest.answers.slice() : new Array(_questions.length).fill(null);
+  document.getElementById('ip-a-name').textContent = aRes.data.name || '(untitled assessment)';
 
-  document.getElementById('pl-a-name').textContent = aRes.data.name || '(untitled assessment)';
-
-  // Compute lowest non-null answer, restricted to sub-themes that HAVE a growth step
-  // (i.e. score < 4). Evergreen items can't be priorities.
-  _minStage = null;
-  for (var i = 0; i < _answers.length; i++) {
-    var a = _answers[i];
-    if (a && a < 4 && (_minStage === null || a < _minStage)) _minStage = a;
-  }
-
-  // Hydrate plan items: existing first, defaults otherwise
-  var existing = (pRes.data && pRes.data.items) ? pRes.data.items : [];
+  // Hydrate items (normalise shape so status/owner/dates are always present).
+  var rows = (pRes.data && pRes.data.items) ? pRes.data.items : [];
   var map = {};
-  existing.forEach(function(it) { map[it.q_idx] = it; });
+  rows.forEach(function(r) { map[r.q_idx] = r; });
+
+  // We also need the latest answers to compute target_stage for growth-step lookup.
+  var rec = JSON.parse(aRes.data.data);
+  var versions = rec.versions || [];
+  var latest = versions.length ? versions[versions.length - 1] : null;
+  var answers = (latest && latest.answers) ? latest.answers : [];
 
   _planItems = _questions.map(function(_, i) {
-    var existing = map[i];
-    var ans = _answers[i];
-    var isDefault = (ans !== null && ans < 4 && ans === _minStage);
+    var r = map[i];
     return {
-      q_idx: i,
-      included: existing ? !!existing.included : isDefault,
-      priority: (existing && (existing.priority === 1 || existing.priority === 2 || existing.priority === 3)) ? existing.priority : null,
-      // Execution-tracking fields — written by implementation-plan.html; preserved here
-      // on save so round-tripping through the planner never wipes them.
-      status:     (existing && existing.status === 'planned') ? 'planned' : 'not_planned',
-      owner:      (existing && typeof existing.owner === 'string') ? existing.owner : '',
-      start_date: (existing && typeof existing.start_date === 'string') ? existing.start_date : null,
-      end_date:   (existing && typeof existing.end_date === 'string') ? existing.end_date : null
+      q_idx:      i,
+      included:   r ? !!r.included : false,
+      priority:   r && (r.priority === 1 || r.priority === 2 || r.priority === 3) ? r.priority : null,
+      status:     r && r.status === 'planned' ? 'planned' : 'not_planned',
+      owner:      r && typeof r.owner === 'string' ? r.owner : '',
+      start_date: r && typeof r.start_date === 'string' ? r.start_date : '',
+      end_date:   r && typeof r.end_date === 'string' ? r.end_date : '',
+      _answer:    answers[i] || null
     };
   });
 }
 
-function isPlanReady() {
-  var anyIncluded = false;
-  for (var i = 0; i < _planItems.length; i++) {
-    var it = _planItems[i];
-    if (!it.included) continue;
-    anyIncluded = true;
-    if (it.priority !== 1 && it.priority !== 2 && it.priority !== 3) return false;
-  }
-  return anyIncluded;
-}
-
-function updateGate() {
-  var btn  = document.getElementById('open-plan-btn');
-  var hint = document.getElementById('open-plan-hint');
-  if (!btn || !hint) return;
-  var ready = isPlanReady();
-  var anyIncluded = _planItems.some(function(it) { return it.included; });
-  btn.disabled = !ready;
-  btn.classList.toggle('btn-accent',    ready);
-  btn.classList.toggle('btn-secondary', !ready);
-  if (!anyIncluded) {
-    hint.textContent = 'Include at least one sub-theme to continue.';
-  } else if (!ready) {
-    hint.textContent = 'Select a priority for every included sub-theme to continue.';
-  } else {
-    hint.textContent = '';
-  }
-}
-
-function openPlan() {
-  if (!isPlanReady()) return;
-  window.location.href = 'implementation-plan.html?assessmentId=' + encodeURIComponent(_assessmentId);
-}
-
 function getGrowthStep(qIdx) {
-  var ans = _answers[qIdx];
+  var ans = _planItems[qIdx]._answer;
   if (!ans || ans >= 4) return null;
   var q = _questions[qIdx];
   var target = ans + 1;
@@ -336,109 +313,117 @@ function getGrowthStep(qIdx) {
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
-  // Group indices by system, preserving question order
-  var groups = [];
-  var seen = {};
-  for (var i = 0; i < _questions.length; i++) {
-    var sys = _questions[i].system;
-    if (!seen[sys]) {
-      seen[sys] = { system: sys, indices: [] };
-      groups.push(seen[sys]);
-    }
-    seen[sys].indices.push(i);
+  // Bucket included items by priority; preserve question sort_order within each bucket.
+  var buckets = { 1: [], 2: [], 3: [] };
+  for (var i = 0; i < _planItems.length; i++) {
+    var it = _planItems[i];
+    if (!it.included || !(it.priority === 1 || it.priority === 2 || it.priority === 3)) continue;
+    buckets[it.priority].push(i);
   }
 
   var html = '';
-  for (var g = 0; g < groups.length; g++) {
-    var grp = groups[g];
-    var color = SYS_COLORS[g % SYS_COLORS.length];
-    html += '<div class="pl-sys-block">'
-         +   '<div class="pl-sys-hdr" style="border-left:6px solid ' + color + ';">'
-         +     '<span class="pl-sys-num">System ' + (g + 1) + '</span>'
-         +     '<span class="pl-sys-name">' + esc(grp.system) + '</span>'
+  [1, 2, 3].forEach(function(p) {
+    var indices = buckets[p];
+    if (!indices.length) return;
+    html += '<div class="ip-group">'
+         +   '<div class="ip-group-hdr">'
+         +     '<span class="ip-group-prio">Priority ' + p + '</span>'
+         +     '<span class="ip-group-count">' + indices.length + ' item' + (indices.length === 1 ? '' : 's') + '</span>'
          +   '</div>';
-    for (var k = 0; k < grp.indices.length; k++) {
-      html += renderRow(grp.indices[k]);
+    for (var k = 0; k < indices.length; k++) {
+      html += renderRow(indices[k]);
     }
     html += '</div>';
-  }
+  });
+  if (!html) html = '<div style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">No items in the plan yet.</div>';
 
-  document.getElementById('planner-list').innerHTML = html;
+  document.getElementById('plan-groups').innerHTML = html;
   wireRows();
-  updateGate();
 }
 
 function renderRow(qIdx) {
   var q = _questions[qIdx];
-  var ans = _answers[qIdx];
-  var gs = getGrowthStep(qIdx);
   var item = _planItems[qIdx];
+  var gs = getGrowthStep(qIdx);
+  var color = SYS_COLORS[q.system] || '#555';
 
-  var isPriorityDefault = (ans !== null && ans < 4 && ans === _minStage);
-  var atTop = ans === 4;
-  var noAns = (ans === null || ans === undefined);
+  var stepTitle = gs ? esc(gs.title) : '<em style="color:var(--muted)">No growth step available</em>';
+  var isPlanned = item.status === 'planned';
+  var disabled = isPlanned ? '' : ' disabled';
+  var npCls = isPlanned ? '' : 'active np';
+  var plCls = isPlanned ? 'active pl' : '';
 
-  var rowCls = 'pl-row';
-  // Greyed-out when the row is not included in the plan AND not a default priority.
-  if (!item.included && !isPriorityDefault) rowCls += ' pl-muted';
-  if (atTop) rowCls += ' pl-row-top';
-
-  var stageHtml = '';
-  if (atTop) {
-    stageHtml = '<span class="pl-stage-chip pl-stage-4">4 &mdash; Evergreen</span>';
-  } else if (noAns) {
-    stageHtml = '<span class="pl-stage-chip pl-stage-na">Not answered</span>';
-  } else {
-    stageHtml = '<span class="pl-stage-chip pl-stage-' + ans + '">' + ans + ' &mdash; ' + STAGE_NAMES[ans] + '</span>'
-              + '<span class="pl-stage-arr">&rarr;</span>'
-              + '<span class="pl-stage-chip pl-stage-next">' + (ans + 1) + ' &mdash; ' + STAGE_NAMES[ans + 1] + '</span>';
-  }
-
-  var actionsHtml;
-  if (!gs) {
-    actionsHtml = '<span class="pl-no-gs">' + (atTop ? 'At highest stage' : 'No growth step') + '</span>';
-  } else {
-    var checked = item.included ? ' checked' : '';
-    var options = '<option value="">&mdash; priority &mdash;</option>';
-    for (var p = 1; p <= 3; p++) {
-      options += '<option value="' + p + '"' + (item.priority === p ? ' selected' : '') + '>Priority ' + p + '</option>';
-    }
-    actionsHtml =
-        '<button class="btn btn-sm btn-secondary pl-detail-btn" data-q="' + qIdx + '">Show Detail</button>'
-      + '<label class="pl-incl"><input type="checkbox" class="pl-incl-cb" data-q="' + qIdx + '"' + checked + '> Include</label>'
-      + '<select class="pl-prio-sel" data-q="' + qIdx + '"' + (item.included ? '' : ' disabled') + '>' + options + '</select>';
-  }
-
-  return '<div class="' + rowCls + '" data-q="' + qIdx + '">'
-       +   '<div class="pl-row-main">'
-       +     '<div class="pl-sub-name">' + esc(q.subtopic) + '</div>'
-       +     '<div class="pl-step-title">' + (gs ? esc(gs.title) : '<em>&mdash;</em>') + '</div>'
-       +     '<div class="pl-stage-area">' + stageHtml + '</div>'
+  return '<div class="ip-row" data-q="' + qIdx + '">'
+       +   '<div class="ip-row-top">'
+       +     '<span class="ip-sys-chip" style="background:' + color + '">' + esc(q.system) + '</span>'
+       +     '<div class="ip-row-title">'
+       +       '<div class="ip-sub">' + esc(q.subtopic) + '</div>'
+       +       '<div class="ip-step">' + stepTitle + '</div>'
+       +     '</div>'
+       +     (gs ? '<div class="ip-row-detail"><button class="btn btn-sm btn-secondary ip-detail-btn" data-q="' + qIdx + '">Show Detail</button></div>' : '')
        +   '</div>'
-       +   '<div class="pl-actions">' + actionsHtml + '</div>'
+       +   '<div class="ip-row-body">'
+       +     '<div class="ip-status" role="group" aria-label="Status">'
+       +       '<button type="button" class="ip-status-btn np ' + npCls + '" data-q="' + qIdx + '" data-st="not_planned">Not Planned</button>'
+       +       '<button type="button" class="ip-status-btn pl ' + plCls + '" data-q="' + qIdx + '" data-st="planned">Planned</button>'
+       +     '</div>'
+       +     '<div class="ip-fields">'
+       +       '<div class="ip-field">'
+       +         '<label for="ip-owner-' + qIdx + '">Owner</label>'
+       +         '<input id="ip-owner-' + qIdx + '" type="text" class="ip-owner" data-q="' + qIdx + '" value="' + esc(item.owner) + '"' + disabled + ' placeholder="e.g. Jane Smith">'
+       +       '</div>'
+       +       '<div class="ip-field">'
+       +         '<label for="ip-start-' + qIdx + '">Start Date</label>'
+       +         '<input id="ip-start-' + qIdx + '" type="date" class="ip-start" data-q="' + qIdx + '" value="' + esc(item.start_date) + '"' + disabled + '>'
+       +       '</div>'
+       +       '<div class="ip-field">'
+       +         '<label for="ip-end-' + qIdx + '">End Date</label>'
+       +         '<input id="ip-end-' + qIdx + '" type="date" class="ip-end" data-q="' + qIdx + '" value="' + esc(item.end_date) + '"' + disabled + '>'
+       +       '</div>'
+       +     '</div>'
+       +   '</div>'
        + '</div>';
 }
 
 function wireRows() {
-  var list = document.getElementById('planner-list');
-  list.querySelectorAll('.pl-incl-cb').forEach(function(el) {
-    el.addEventListener('change', function() {
+  var root = document.getElementById('plan-groups');
+
+  root.querySelectorAll('.ip-status-btn').forEach(function(el) {
+    el.addEventListener('click', function() {
       var qIdx = parseInt(el.getAttribute('data-q'), 10);
-      _planItems[qIdx].included = el.checked;
-      if (!el.checked) _planItems[qIdx].priority = null;
+      var next = el.getAttribute('data-st');
+      if (_planItems[qIdx].status === next) return;
+      _planItems[qIdx].status = next;
       render();
       queueSave();
     });
   });
-  list.querySelectorAll('.pl-prio-sel').forEach(function(el) {
-    el.addEventListener('change', function() {
+
+  root.querySelectorAll('.ip-owner').forEach(function(el) {
+    el.addEventListener('input', function() {
       var qIdx = parseInt(el.getAttribute('data-q'), 10);
-      _planItems[qIdx].priority = el.value ? parseInt(el.value, 10) : null;
-      updateGate();
+      _planItems[qIdx].owner = el.value;
       queueSave();
     });
   });
-  list.querySelectorAll('.pl-detail-btn').forEach(function(el) {
+
+  root.querySelectorAll('.ip-start').forEach(function(el) {
+    el.addEventListener('change', function() {
+      var qIdx = parseInt(el.getAttribute('data-q'), 10);
+      _planItems[qIdx].start_date = el.value;
+      queueSave();
+    });
+  });
+
+  root.querySelectorAll('.ip-end').forEach(function(el) {
+    el.addEventListener('change', function() {
+      var qIdx = parseInt(el.getAttribute('data-q'), 10);
+      _planItems[qIdx].end_date = el.value;
+      queueSave();
+    });
+  });
+
+  root.querySelectorAll('.ip-detail-btn').forEach(function(el) {
     el.addEventListener('click', function() {
       openDetail(parseInt(el.getAttribute('data-q'), 10));
     });
@@ -450,29 +435,29 @@ function openDetail(qIdx) {
   var q = _questions[qIdx];
   var gs = getGrowthStep(qIdx);
   if (!gs) return;
-  document.getElementById('pl-dmod-sub').textContent = q.subtopic + ' \u00B7 ' + q.system;
-  document.getElementById('pl-dmod-title').textContent = gs.title;
+  document.getElementById('ip-dmod-sub').textContent = q.subtopic + ' \u00B7 ' + q.system;
+  document.getElementById('ip-dmod-title').textContent = gs.title;
   var body = '';
   function sec(label, val) {
     if (!val) return '';
-    return '<div class="pl-dmod-sec">'
-         +   '<div class="pl-dmod-lbl">' + esc(label) + '</div>'
-         +   '<div class="pl-dmod-val">' + esc(val) + '</div>'
+    return '<div class="ip-dmod-sec">'
+         +   '<div class="ip-dmod-lbl">' + esc(label) + '</div>'
+         +   '<div class="ip-dmod-val">' + esc(val) + '</div>'
          + '</div>';
   }
-  body += sec('Inputs Needed',              gs.inputs);
-  body += sec('Process Steps',              gs.process_steps);
-  body += sec('Outputs Generated',          gs.outputs);
+  body += sec('Inputs Needed',                gs.inputs);
+  body += sec('Process Steps',                gs.process_steps);
+  body += sec('Outputs Generated',            gs.outputs);
   body += sec('Tools / Templates / Training', gs.tools);
-  body += sec('Outcome KPIs',               gs.kpis);
-  body += sec('Target Audience',            gs.audience);
-  body += sec('Time Required',              gs.time_required);
-  body += sec('Resources Involved',         gs.resources);
-  document.getElementById('pl-dmod-body').innerHTML = body;
+  body += sec('Outcome KPIs',                 gs.kpis);
+  body += sec('Target Audience',              gs.audience);
+  body += sec('Time Required',                gs.time_required);
+  body += sec('Resources Involved',           gs.resources);
+  document.getElementById('ip-dmod-body').innerHTML = body;
   document.getElementById('detail-modal').classList.add('open');
 }
 
-document.getElementById('pl-dmod-close').addEventListener('click', function() {
+document.getElementById('ip-dmod-close').addEventListener('click', function() {
   document.getElementById('detail-modal').classList.remove('open');
 });
 document.getElementById('detail-modal').addEventListener('click', function(e) {
@@ -490,10 +475,22 @@ function queueSave() {
 
 async function savePlan() {
   try {
+    // Strip transient fields before persisting.
+    var persist = _planItems.map(function(it) {
+      return {
+        q_idx:      it.q_idx,
+        included:   it.included,
+        priority:   it.priority,
+        status:     it.status,
+        owner:      it.owner,
+        start_date: it.start_date || null,
+        end_date:   it.end_date || null
+      };
+    });
     var res = await sb().from('implementation_plans').upsert({
       assessment_id: _assessmentId,
       user_id: _userId,
-      items: _planItems
+      items: persist
     }, { onConflict: 'assessment_id' });
     if (res.error) throw res.error;
     setSaveStatus('Saved \u2713', 'ok');
