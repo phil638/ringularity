@@ -694,22 +694,64 @@ body::after {
   align-items: center;
   gap: 10px;
 }
-.access-select {
-  font-family: inherit;
+.access-list {
   font-size: 0.84rem;
   color: var(--ink);
-  background: #fff;
+  background: var(--paper);
   border: 1px solid var(--rule);
   border-radius: 4px;
-  padding: 5px 8px;
-  max-width: 340px;
+  max-width: 360px;
+  overflow: hidden;
+}
+.access-list > summary {
   cursor: pointer;
+  padding: 6px 10px;
+  list-style: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.access-select:disabled {
-  opacity: 1;
-  color: var(--ink);
-  background: var(--paper);
+.access-list > summary::-webkit-details-marker { display: none; }
+.access-list > summary::before {
+  content: '\25B8';
+  font-size: 0.72rem;
+  color: var(--muted);
+  transition: transform 0.15s;
+  display: inline-block;
 }
+.access-list[open] > summary::before { transform: rotate(90deg); }
+.access-list > summary:hover { background: #fff; }
+.access-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  border-top: 1px solid var(--rule);
+  background: #fff;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.access-list li {
+  padding: 5px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 0.82rem;
+}
+.access-list li + li { border-top: 1px dashed var(--rule); }
+.al-name { color: var(--ink); font-weight: 500; }
+.al-role {
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.al-role-admin { color: var(--accent); }
+.al-role-consultant { color: #2d6a4f; }
+.al-role-client { color: #4a7c9e; }
 .cs-note {
   color: var(--muted);
   font-size: 0.76rem;
@@ -1603,8 +1645,9 @@ function renderClients() {
     if (!access.length) {
       html += '<span class="consultants-empty">no admins configured yet</span>';
     } else {
-      html += '<select class="access-select" disabled title="Access is granted in the Users section">';
-      html +=   '<option>' + esc(countLabel) + ' &mdash; click to view</option>';
+      html += '<details class="access-list" title="Access is granted in the Users section">'
+           +    '<summary>' + esc(countLabel) + ' \u2014 click to view</summary>'
+           +    '<ul>';
       for (var k = 0; k < access.length; k++) {
         var au = access[k];
         var name = au.display_name || au.email || au.id;
@@ -1612,9 +1655,10 @@ function renderClients() {
                       : au.role === 'consultant' ? 'Consultant'
                       : au.role === 'client' ? 'Client user'
                       : au.role || 'User';
-        html += '<option>' + esc(name) + ' \u2014 ' + esc(roleLabel) + '</option>';
+        html += '<li><span class="al-name">' + esc(name) + '</span><span class="al-role al-role-' + esc(au.role || 'user') + '">' + esc(roleLabel) + '</span></li>';
       }
-      html += '</select>';
+      html +=    '</ul>'
+           +  '</details>';
     }
     html +=   '<span class="cs-note">Access is granted in the Users section.</span>'
          + '</div>';
