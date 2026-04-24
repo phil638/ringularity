@@ -688,14 +688,74 @@ body::after {
   margin-right: 10px;
   font-weight: 600;
 }
-.consultants-row label {
-  margin-right: 14px;
-  cursor: pointer;
-  color: var(--ink);
+.consultants-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
 }
-.consultants-row label input {
-  margin-right: 4px;
-  vertical-align: middle;
+.access-list {
+  font-size: 0.84rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  max-width: 360px;
+  overflow: hidden;
+}
+.access-list > summary {
+  cursor: pointer;
+  padding: 6px 10px;
+  list-style: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.access-list > summary::-webkit-details-marker { display: none; }
+.access-list > summary::before {
+  content: '\25B8';
+  font-size: 0.72rem;
+  color: var(--muted);
+  transition: transform 0.15s;
+  display: inline-block;
+}
+.access-list[open] > summary::before { transform: rotate(90deg); }
+.access-list > summary:hover { background: #fff; }
+.access-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  border-top: 1px solid var(--rule);
+  background: #fff;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.access-list li {
+  padding: 5px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 0.82rem;
+}
+.access-list li + li { border-top: 1px dashed var(--rule); }
+.al-name { color: var(--ink); font-weight: 500; }
+.al-role {
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.al-role-admin { color: var(--accent); }
+.al-role-consultant { color: #2d6a4f; }
+.al-role-client { color: #4a7c9e; }
+.cs-note {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-style: italic;
 }
 .consultants-empty {
   color: var(--muted);
@@ -1024,15 +1084,15 @@ body::after {
     <p class="home-sub">Choose an area to manage.</p>
 
     <div class="menu-grid">
-      <a class="menu-tile" data-action="users">
-        <div class="tile-icon">&#x1F465;</div>
-        <div class="tile-title">Users</div>
-        <div class="tile-sub">Setup &amp; administer users</div>
-      </a>
       <a class="menu-tile" data-action="clients">
         <div class="tile-icon">&#x1F3E2;</div>
         <div class="tile-title">Clients</div>
         <div class="tile-sub">Setup &amp; administer clients</div>
+      </a>
+      <a class="menu-tile" data-action="users">
+        <div class="tile-icon">&#x1F465;</div>
+        <div class="tile-title">Users</div>
+        <div class="tile-sub">Setup users &amp; grant client access</div>
       </a>
       <a class="menu-tile" data-action="questions">
         <div class="tile-icon">&#x1F4DD;</div>
@@ -1507,7 +1567,9 @@ function loadClientsData() {
   var sb = sbClient();
   return Promise.all([
     sb.from('clients').select('id, name, created_at').order('name'),
-    sb.from('profiles').select('id, email, display_name, role').in('role', ['consultant', 'admin']).order('display_name'),
+    // Fetch every profile so the access dropdown can include admins (auto),
+    // consultants and client users linked via user_clients.
+    sb.from('profiles').select('id, email, display_name, role').order('display_name'),
     sb.from('user_clients').select('user_id, client_id'),
     sb.from('assessments').select('client_id')
   ]).then(function(results) {
@@ -1559,19 +1621,47 @@ function renderClients() {
           +     '</div>'
           +   '</div>';
 
-    if (_consultants.length === 0) {
-      html += '<div class="consultants-row"><span class="cs-label">Consultants:</span><span class="consultants-empty">no consultants or admins configured yet</span></div>';
-    } else {
-      html += '<div class="consultants-row"><span class="cs-label">Consultants &amp; admins:</span>';
-      for (var j = 0; j < _consultants.length; j++) {
-        var u = _consultants[j];
-        var checked = linked[u.id] ? ' checked' : '';
-        var displayName = u.display_name || u.email || u.id;
-        var roleBadge = u.role === 'admin' ? ' (admin)' : '';
-        html += '<label><input type="checkbox" data-role="link" data-client-id="' + escAttr(c.id) + '" data-user-id="' + escAttr(u.id) + '"' + checked + '/> ' + esc(displayName) + esc(roleBadge) + '</label>';
-      }
-      html += '</div>';
+    // People-with-access list: all admins (auto) + everyone linked via user_clients.
+    // Order: admins first (alphabetical), then consultants, then client users.
+    var roleRank = { admin: 0, consultant: 1, client: 2 };
+    var access = [];
+    for (var j = 0; j < _consultants.length; j++) {
+      var u = _consultants[j];
+      var hasLink = !!linked[u.id];
+      if (u.role === 'admin' || hasLink) access.push(u);
     }
+    access.sort(function(a, b) {
+      var ra = roleRank[a.role] == null ? 9 : roleRank[a.role];
+      var rb = roleRank[b.role] == null ? 9 : roleRank[b.role];
+      if (ra !== rb) return ra - rb;
+      var na = (a.display_name || a.email || '').toLowerCase();
+      var nb = (b.display_name || b.email || '').toLowerCase();
+      return na < nb ? -1 : na > nb ? 1 : 0;
+    });
+
+    var countLabel = access.length + ' ' + (access.length === 1 ? 'person' : 'people');
+    html += '<div class="consultants-row">'
+         +   '<span class="cs-label">People with access:</span>';
+    if (!access.length) {
+      html += '<span class="consultants-empty">no admins configured yet</span>';
+    } else {
+      html += '<details class="access-list" title="Access is granted in the Users section">'
+           +    '<summary>' + esc(countLabel) + ' \u2014 click to view</summary>'
+           +    '<ul>';
+      for (var k = 0; k < access.length; k++) {
+        var au = access[k];
+        var name = au.display_name || au.email || au.id;
+        var roleLabel = au.role === 'admin' ? 'Admin'
+                      : au.role === 'consultant' ? 'Consultant'
+                      : au.role === 'client' ? 'Client user'
+                      : au.role || 'User';
+        html += '<li><span class="al-name">' + esc(name) + '</span><span class="al-role al-role-' + esc(au.role || 'user') + '">' + esc(roleLabel) + '</span></li>';
+      }
+      html +=    '</ul>'
+           +  '</details>';
+    }
+    html +=   '<span class="cs-note">Access is granted in the Users section.</span>'
+         + '</div>';
     html += '</div>';
   }
   container.innerHTML = html;
@@ -1582,11 +1672,6 @@ function renderClients() {
   });
   container.querySelectorAll('button[data-action="delete"]').forEach(function(btn) {
     btn.addEventListener('click', function() { deleteClient(btn.getAttribute('data-id')); });
-  });
-  container.querySelectorAll('input[data-role="link"]').forEach(function(cb) {
-    cb.addEventListener('change', function() {
-      toggleConsultantLink(cb.getAttribute('data-client-id'), cb.getAttribute('data-user-id'), cb.checked, cb);
-    });
   });
 }
 
@@ -1663,24 +1748,6 @@ function deleteClient(clientId) {
         setClientsStatus('Delete failed: ' + msg, 'error');
       }
     });
-  });
-}
-
-function toggleConsultantLink(clientId, userId, checked, cbEl) {
-  var sb = sbClient();
-  var op = checked
-    ? sb.from('user_clients').insert({ client_id: clientId, user_id: userId })
-    : sb.from('user_clients').delete().eq('client_id', clientId).eq('user_id', userId);
-  op.then(function(res) {
-    if (res.error) throw res.error;
-    if (!_userClientsMap[clientId]) _userClientsMap[clientId] = {};
-    if (checked) _userClientsMap[clientId][userId] = true;
-    else delete _userClientsMap[clientId][userId];
-    setClientsStatus('Saved.', 'success');
-    setTimeout(function() { setClientsStatus('', ''); }, 1500);
-  }).catch(function(e) {
-    setClientsStatus((checked ? 'Assignment failed: ' : 'Unassignment failed: ') + (e.message || e), 'error');
-    cbEl.checked = !checked;
   });
 }
 
