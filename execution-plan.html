@@ -3,17 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ringularity &ndash; Implementation Plan</title>
+<title>Ringularity &ndash; Execution Plan</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#1a1a2e;--paper:#f8f6f1;--accent:#c8813a;--accent2:#2d6a4f;--muted:#6b6b7a;--rule:#e0ddd6;--seeding:#c0392b;--grounding:#e67e22;--branching:#2980b9;--evergreen:#27ae60;--np-bg:#e0ddd6;--np-fg:#555;--pl-bg:#2d6a4f;--pl-fg:#fff;}
+:root{
+  --ink:#1a1a2e;--paper:#f8f6f1;--accent:#c8813a;--accent2:#2d6a4f;--muted:#6b6b7a;--rule:#e0ddd6;
+  --st-ns:#9ca3af;   /* not_started - grey */
+  --st-ot:#e6a43a;   /* on_track    - amber */
+  --st-dl:#c0392b;   /* delayed     - red */
+  --st-cp:#2d6a4f;   /* completed   - green */
+}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:#101812;color:var(--ink);font-size:15px;line-height:1.6;min-height:100vh;position:relative;}
 body::before{content:'';position:fixed;inset:0;background:linear-gradient(to bottom,rgba(10,20,12,0.72) 0%,rgba(10,20,12,0.55) 40%,rgba(10,20,12,0.72) 100%),url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=85&fit=crop') center 30% / cover no-repeat;pointer-events:none;z-index:0;}
 body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
-.site-header,.ip-wrap,#auth-loading,#auth-error,#gate-block{position:relative;z-index:1;}
+.site-header,.ep-wrap,#auth-loading,#auth-error,#gate-block{position:relative;z-index:1;}
 .site-header{background:var(--ink);color:var(--paper);padding:14px 28px;border-bottom:3px solid var(--accent);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
-.logo-area{display:flex;align-items:center;gap:10px;}
 .logo-brand{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--paper);letter-spacing:-0.01em;}
 .logo-tag{font-size:0.68rem;color:rgba(248,246,241,0.5);letter-spacing:0.08em;text-transform:uppercase;}
 .hdr-links{display:flex;gap:18px;align-items:center;}
@@ -22,64 +27,106 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 #auth-loading,#auth-error,#gate-block{color:var(--paper);text-align:center;padding:80px 20px;font-size:1rem;}
 #auth-error{color:#f66;}
 #gate-block a{color:var(--accent);text-decoration:underline;margin-top:14px;display:inline-block;}
-.ip-wrap{max-width:1180px;margin:28px auto 40px;background:var(--paper);border-radius:12px;padding:30px 34px 44px;box-shadow:0 10px 40px rgba(0,0,0,0.35);}
-.ip-title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
-.ip-title{font-family:'Playfair Display',serif;font-size:1.8rem;line-height:1.1;}
-.ip-a-name{font-family:'Playfair Display',serif;color:var(--accent);font-size:1rem;margin-top:2px;}
-.ip-save-status{font-size:0.78rem;color:var(--muted);min-height:1em;}
-.ip-save-status.ok{color:var(--accent2);}
-.ip-save-status.err{color:#c0392b;}
-.ip-intro{background:rgba(45,106,79,0.06);border-left:3px solid var(--accent2);padding:11px 14px;font-size:0.84rem;color:var(--ink);margin:22px 0 24px;border-radius:0 4px 4px 0;}
-.ip-group{margin-bottom:28px;}
-.ip-group-hdr{display:flex;align-items:baseline;gap:14px;padding:10px 16px;margin-bottom:10px;background:var(--ink);color:var(--paper);border-radius:6px;}
-.ip-group-prio{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--accent);}
-.ip-group-count{font-size:0.75rem;color:rgba(248,246,241,0.6);letter-spacing:0.05em;text-transform:uppercase;}
-.ip-row{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:16px 18px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
-.ip-row-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
-.ip-sys-chip{display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.7rem;font-weight:700;color:#fff;white-space:nowrap;flex-shrink:0;letter-spacing:0.02em;}
-.ip-row-title{flex:1;min-width:0;}
-.ip-sub{font-size:0.78rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
-.ip-step{font-family:'Playfair Display',serif;font-size:1.02rem;color:var(--ink);line-height:1.3;}
-.ip-row-detail{flex-shrink:0;}
-.ip-row-body{display:grid;grid-template-columns:auto 1fr;gap:14px 18px;align-items:center;}
-@media(max-width:720px){.ip-row-body{grid-template-columns:1fr;}}
-.ip-status{display:flex;gap:0;align-items:center;border:1px solid var(--rule);border-radius:6px;overflow:hidden;flex-shrink:0;}
-.ip-status-btn{padding:7px 14px;font-size:0.82rem;font-family:'DM Sans',sans-serif;font-weight:600;border:none;background:#fff;color:var(--muted);cursor:pointer;transition:all 0.15s;border-right:1px solid var(--rule);}
-.ip-status-btn:last-child{border-right:none;}
-.ip-status-btn:hover{background:#f5f2ec;}
-.ip-status-btn.active.np{background:var(--np-bg);color:var(--np-fg);}
-.ip-status-btn.active.pl{background:var(--pl-bg);color:var(--pl-fg);}
-.ip-fields{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;}
-@media(max-width:720px){.ip-fields{grid-template-columns:1fr;}}
-.ip-field{display:flex;flex-direction:column;gap:3px;}
-.ip-field label{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
-.ip-field input{padding:7px 10px;border:1px solid var(--rule);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.86rem;color:var(--ink);background:#fff;}
-.ip-field input:focus{outline:none;border-color:var(--ink);}
-.ip-field input:disabled{background:#f5f5f5;color:#aaa;cursor:not-allowed;}
+.ep-wrap{max-width:1280px;margin:28px auto 40px;background:var(--paper);border-radius:12px;padding:30px 30px 44px;box-shadow:0 10px 40px rgba(0,0,0,0.35);}
+.ep-title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+.ep-title{font-family:'Playfair Display',serif;font-size:1.8rem;line-height:1.1;}
+.ep-a-name{font-family:'Playfair Display',serif;color:var(--accent);font-size:1rem;margin-top:2px;}
+.ep-save-status{font-size:0.78rem;color:var(--muted);min-height:1em;}
+.ep-save-status.ok{color:var(--accent2);}
+.ep-save-status.err{color:#c0392b;}
+.ep-tabs{display:flex;gap:0;border-bottom:2px solid var(--rule);margin:22px 0 18px;}
+.ep-tab{padding:10px 22px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;background:none;border:none;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all 0.15s;}
+.ep-tab:hover{color:var(--ink);}
+.ep-tab.active{color:var(--ink);border-bottom-color:var(--accent);}
+.ep-view{display:none;}
+.ep-view.active{display:block;}
+/* ── Legend ──────────────────────────────────────────────────────────────── */
+.ep-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted);margin-bottom:14px;align-items:center;}
+.ep-legend-dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+.ep-legend-ns{background:var(--st-ns);} .ep-legend-ot{background:var(--st-ot);}
+.ep-legend-dl{background:var(--st-dl);} .ep-legend-cp{background:var(--st-cp);}
+/* ── Gantt ───────────────────────────────────────────────────────────────── */
+.ep-gantt-scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:#fff;}
+.ep-gantt{display:flex;flex-direction:column;min-width:fit-content;}
+.ep-gantt-hdr{display:flex;align-items:stretch;background:var(--ink);color:var(--paper);position:sticky;top:0;z-index:5;}
+.ep-hdr-labels{width:340px;flex-shrink:0;padding:10px 14px;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(248,246,241,0.65);border-right:1px solid rgba(248,246,241,0.15);}
+.ep-hdr-weeks{display:flex;flex:1;min-width:0;}
+.ep-hdr-week{width:70px;flex-shrink:0;text-align:center;padding:8px 4px;border-left:1px solid rgba(248,246,241,0.1);font-size:0.66rem;line-height:1.15;}
+.ep-hdr-week-num{font-weight:700;}
+.ep-hdr-week-date{color:rgba(248,246,241,0.55);font-size:0.62rem;}
+.ep-gantt-group{display:flex;flex-direction:column;}
+.ep-group-label{padding:10px 16px;background:#f1ede4;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:var(--accent);letter-spacing:0.02em;}
+.ep-gantt-row{display:flex;align-items:stretch;border-bottom:1px solid var(--rule);}
+.ep-gantt-row:last-child{border-bottom:none;}
+.ep-row-labels{width:340px;flex-shrink:0;padding:10px 14px;border-right:1px solid var(--rule);background:#fff;display:flex;flex-direction:column;gap:5px;}
+.ep-row-sys{display:inline-block;align-self:flex-start;padding:2px 8px;border-radius:10px;font-size:0.64rem;font-weight:700;color:#fff;letter-spacing:0.02em;text-transform:uppercase;}
+.ep-row-sub{font-size:0.7rem;font-weight:600;letter-spacing:0.03em;text-transform:uppercase;color:var(--muted);}
+.ep-row-step{font-family:'Playfair Display',serif;font-size:0.93rem;color:var(--ink);line-height:1.25;}
+.ep-row-meta{font-size:0.72rem;color:var(--muted);}
+.ep-row-meta b{color:var(--ink);font-weight:600;}
+.ep-row-track{flex:1;min-width:0;position:relative;background:repeating-linear-gradient(to right,#fff 0 69px,#f4f0e8 69px 70px);}
+.ep-bar{position:absolute;top:14px;bottom:14px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:0.72rem;color:#fff;font-weight:600;letter-spacing:0.02em;overflow:hidden;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.12);}
+.ep-bar-ns{background:var(--st-ns);} .ep-bar-ot{background:var(--st-ot);}
+.ep-bar-dl{background:var(--st-dl);} .ep-bar-cp{background:var(--st-cp);}
+.ep-row-actions{width:300px;flex-shrink:0;padding:10px 12px;border-left:1px solid var(--rule);background:#fafafa;display:flex;flex-direction:column;gap:8px;}
+.ep-status-grp{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;}
+.ep-status-btn{padding:5px 6px;font-size:0.72rem;font-weight:600;border:1px solid var(--rule);border-radius:4px;background:#fff;color:var(--muted);cursor:pointer;transition:all 0.12s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;}
+.ep-status-btn:hover{background:#f5f2ec;}
+.ep-status-btn .ep-sdot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+.ep-status-btn.active{color:#fff;border-color:transparent;}
+.ep-status-btn.active.not_started{background:var(--st-ns);} .ep-status-btn.active.on_track{background:var(--st-ot);}
+.ep-status-btn.active.delayed{background:var(--st-dl);} .ep-status-btn.active.completed{background:var(--st-cp);}
+.ep-detail-btn{font-size:0.74rem;padding:5px 10px;}
+/* ── Kanban ──────────────────────────────────────────────────────────────── */
+.ep-kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+@media(max-width:980px){.ep-kanban{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.ep-kanban{grid-template-columns:1fr;}}
+.ep-col{background:#fff;border:1px solid var(--rule);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-height:180px;}
+.ep-col-hdr{padding:10px 14px;color:#fff;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;display:flex;justify-content:space-between;align-items:center;}
+.ep-col-hdr-not_started{background:var(--st-ns);} .ep-col-hdr-on_track{background:var(--st-ot);}
+.ep-col-hdr-delayed{background:var(--st-dl);} .ep-col-hdr-completed{background:var(--st-cp);}
+.ep-col-count{font-size:0.7rem;background:rgba(255,255,255,0.22);padding:2px 8px;border-radius:10px;font-weight:700;}
+.ep-col-body{padding:10px;flex:1;display:flex;flex-direction:column;gap:8px;}
+.ep-col-empty{color:var(--muted);font-size:0.78rem;font-style:italic;text-align:center;padding:18px 10px;}
+.ep-card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.ep-card-hdr{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.ep-card-prio{font-size:0.64rem;font-weight:800;color:var(--accent);letter-spacing:0.05em;}
+.ep-card-sub{font-size:0.68rem;font-weight:600;letter-spacing:0.03em;text-transform:uppercase;color:var(--muted);}
+.ep-card-step{font-family:'Playfair Display',serif;font-size:0.92rem;color:var(--ink);line-height:1.25;}
+.ep-card-meta{font-size:0.72rem;color:var(--muted);line-height:1.45;}
+.ep-card-meta b{color:var(--ink);font-weight:600;}
+.ep-card-actions{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+.ep-card-actions .ep-status-grp{grid-template-columns:repeat(4,1fr);}
+/* ── Buttons / modals ────────────────────────────────────────────────────── */
 .btn{padding:6px 14px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;border:1.5px solid transparent;background:var(--ink);color:var(--paper);transition:all 0.15s;}
 .btn:hover{filter:brightness(1.1);}
 .btn-secondary{background:transparent;color:var(--ink);border-color:var(--rule);}
 .btn-secondary:hover{border-color:var(--ink);background:#fff;}
-.btn-sm{padding:4px 11px;font-size:0.76rem;}
-.ip-footer{margin-top:30px;padding-top:22px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
-.ip-footer .btn{padding:9px 20px;font-weight:600;}
-.modal-ov{position:fixed;inset:0;background:rgba(26,26,46,0.55);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity 0.2s;}
-.modal-ov.open{opacity:1;pointer-events:auto;}
-.modal{background:#fff;border-radius:8px;padding:26px;width:92%;max-width:640px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(26,26,46,0.4);transform:translateY(8px);transition:transform 0.2s;}
-.modal-ov.open .modal{transform:translateY(0);}
-.ip-dmod-sub{font-size:0.7rem;color:var(--muted);margin-bottom:4px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
-.ip-dmod-title{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--ink);margin-bottom:18px;line-height:1.25;}
-.ip-dmod-sec{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--rule);}
-.ip-dmod-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
-.ip-dmod-lbl{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
-.ip-dmod-val{font-size:0.88rem;color:var(--ink);white-space:pre-line;line-height:1.55;}
-.modal-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);}
-.ip-gate{margin-top:30px;padding-top:22px;border-top:1px solid var(--rule);text-align:center;}
-.ip-gate .btn{padding:10px 24px;font-size:0.92rem;font-weight:600;}
-.ip-gate .btn[disabled]{cursor:not-allowed;opacity:0.6;}
 .btn-accent{background:var(--accent);color:#fff;border-color:var(--accent);}
 .btn-accent:hover{background:#b57232;border-color:#b57232;}
-.ip-gate-hint{font-size:0.8rem;color:var(--muted);margin-top:8px;min-height:1.1em;font-style:italic;}
+.btn-sm{padding:4px 11px;font-size:0.76rem;}
+.ep-footer{margin-top:26px;padding-top:18px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.modal-ov{position:fixed;inset:0;background:rgba(26,26,46,0.55);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-ov.open{opacity:1;pointer-events:auto;}
+.modal-ov.modal-ov-top{z-index:1100;}
+.modal{background:#fff;border-radius:8px;padding:26px;width:92%;max-width:640px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(26,26,46,0.4);transform:translateY(8px);transition:transform 0.2s;}
+.modal-ov.open .modal{transform:translateY(0);}
+.ep-dmod-sub{font-size:0.7rem;color:var(--muted);margin-bottom:4px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+.ep-dmod-title{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--ink);margin-bottom:18px;line-height:1.25;}
+.ep-dmod-sec{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--rule);}
+.ep-dmod-sec:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.ep-dmod-lbl{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.ep-dmod-val{font-size:0.88rem;color:var(--ink);white-space:pre-line;line-height:1.55;}
+.ep-dmod-resources{margin-top:14px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.modal-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);}
+.ep-res-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--rule);border-radius:6px;margin-bottom:8px;background:#fafafa;transition:background 0.12s;}
+.ep-res-item:hover{background:#f0f4ff;cursor:pointer;}
+.ep-res-icon{width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;background:#eee;}
+.ep-res-info{flex:1;min-width:0;}
+.ep-res-name{font-weight:600;font-size:0.84rem;color:var(--ink);}
+.ep-res-meta{font-size:0.72rem;color:var(--muted);margin-top:2px;}
+.ep-res-empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:0.86rem;line-height:1.6;}
+.ep-res-loading{text-align:center;padding:28px 16px;color:var(--muted);font-size:0.86rem;}
 </style>
 </head>
 <body>
@@ -88,53 +135,84 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
   <div class="logo-area">
     <div>
       <div class="logo-brand">Ringularity</div>
-      <div class="logo-tag">Implementation Plan</div>
+      <div class="logo-tag">Execution Plan</div>
     </div>
   </div>
   <div class="hdr-links">
     <a href="index.html">&larr; Home</a>
-    <a href="#" id="back-to-planner">&larr; Back to Planner</a>
+    <a href="#" id="back-to-plan">&larr; Back to Plan</a>
   </div>
 </div>
 
-<div id="auth-loading">Loading plan&hellip;</div>
+<div id="auth-loading">Loading execution plan&hellip;</div>
 <div id="auth-error" style="display:none;"></div>
 <div id="gate-block" style="display:none;">
   <div id="gate-block-msg"></div>
 </div>
 
-<div id="plan-main" style="display:none;">
-  <div class="ip-wrap">
-    <div class="ip-title-row">
+<div id="ep-main" style="display:none;">
+  <div class="ep-wrap">
+    <div class="ep-title-row">
       <div>
-        <h1 class="ip-title">Implementation Plan</h1>
-        <div class="ip-a-name" id="ip-a-name">&mdash;</div>
+        <h1 class="ep-title">Execution Plan</h1>
+        <div class="ep-a-name" id="ep-a-name">&mdash;</div>
       </div>
-      <div class="ip-save-status" id="ip-save-status"></div>
+      <div class="ep-save-status" id="ep-save-status"></div>
     </div>
-    <div class="ip-intro">
-      Your selected growth steps, grouped by priority. Switch a row to <strong>Planned</strong> to set an owner and target dates. Back to the planner anytime to adjust selections.
+
+    <div class="ep-tabs" role="tablist">
+      <button class="ep-tab active" data-view="gantt" role="tab">Gantt</button>
+      <button class="ep-tab" data-view="kanban" role="tab">Kanban</button>
     </div>
-    <div id="plan-groups"></div>
-    <div class="ip-gate">
-      <button class="btn btn-secondary" id="create-exec-btn" disabled onclick="openExecutionPlan()">Create Execution Plan &rarr;</button>
-      <div class="ip-gate-hint" id="create-exec-hint"></div>
+
+    <div class="ep-legend">
+      <span><span class="ep-legend-dot ep-legend-ns"></span>Not Started</span>
+      <span><span class="ep-legend-dot ep-legend-ot"></span>On Track</span>
+      <span><span class="ep-legend-dot ep-legend-dl"></span>Delayed</span>
+      <span><span class="ep-legend-dot ep-legend-cp"></span>Completed</span>
     </div>
-    <div class="ip-footer">
-      <a href="#" class="btn btn-secondary" id="footer-back">&larr; Back to Planner</a>
-      <span class="ip-save-status" id="ip-save-status-foot"></span>
+
+    <div class="ep-view active" id="ep-view-gantt">
+      <div class="ep-gantt-scroll" id="ep-gantt-scroll"></div>
+    </div>
+
+    <div class="ep-view" id="ep-view-kanban">
+      <div class="ep-kanban" id="ep-kanban"></div>
+    </div>
+
+    <div class="ep-footer">
+      <a href="#" class="btn btn-secondary" id="footer-back">&larr; Back to Plan</a>
+      <span class="ep-save-status" id="ep-save-status-foot"></span>
     </div>
   </div>
 </div>
 
-<!-- DETAIL MODAL -->
+<!-- DETAIL MODAL (growth step info) -->
 <div class="modal-ov" id="detail-modal">
   <div class="modal">
-    <div class="ip-dmod-sub" id="ip-dmod-sub">&mdash;</div>
-    <div class="ip-dmod-title" id="ip-dmod-title">&mdash;</div>
-    <div id="ip-dmod-body"></div>
+    <div class="ep-dmod-sub" id="ep-dmod-sub">&mdash;</div>
+    <div class="ep-dmod-title" id="ep-dmod-title">&mdash;</div>
+    <div id="ep-dmod-body"></div>
+    <div class="ep-dmod-resources">
+      <span style="font-size:0.82rem;color:var(--muted);">Supporting files for this growth step</span>
+      <button class="btn btn-accent btn-sm" id="ep-dmod-res-btn">Resources &rarr;</button>
+    </div>
     <div class="modal-acts">
-      <button class="btn btn-secondary" id="ip-dmod-close">Close</button>
+      <button class="btn btn-secondary" id="ep-dmod-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESOURCES MODAL (stacks on top of detail) -->
+<div class="modal-ov modal-ov-top" id="res-modal">
+  <div class="modal">
+    <div class="ep-dmod-sub" id="ep-res-sub">&mdash;</div>
+    <div class="ep-dmod-title" id="ep-res-title">Resources</div>
+    <div id="ep-res-body">
+      <div class="ep-res-loading">Loading resources&hellip;</div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-secondary" id="ep-res-close">Close</button>
     </div>
   </div>
 </div>
@@ -153,7 +231,6 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 // ── Config ────────────────────────────────────────────────────────────────────
 var SUPABASE_URL  = 'https://zxrxjnaivfeveulajllj.supabase.co';
 var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4cnhqbmFpdmZldmV1bGFqbGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwOTI2MzIsImV4cCI6MjA4NzY2ODYzMn0.l31A7-zHxV5zCYLVyUws7fmp1STWoe4Ecw7mhqcw-mo';
-// Colour per system — keep in sync with implementation-planner.html and assessment.html.
 var SYS_COLORS = {
   'Strategic Direction & Execution':                '#4a7c9e',
   'Performance Improvement & Tangible Results':     '#b8924a',
@@ -161,6 +238,13 @@ var SYS_COLORS = {
   'Process Excellence & Systems Thinking':          '#4a7c6f',
   'Organisational Agility & Continuous Innovation': '#8a6f4a'
 };
+var STATUSES = [
+  { key: 'not_started', label: 'Not Started' },
+  { key: 'on_track',    label: 'On Track'    },
+  { key: 'delayed',     label: 'Delayed'     },
+  { key: 'completed',   label: 'Completed'   }
+];
+var WEEK_PX = 70; // keep in sync with .ep-hdr-week width and the track background stripe
 
 // ── State ─────────────────────────────────────────────────────────────────────
 var _sb = null;
@@ -168,8 +252,11 @@ var _userId = null;
 var _assessmentId = null;
 var _questions = [];
 var _growthSteps = [];
-var _planItems = [];
+var _planItems = [];   // full array (includes non-execution items, preserved for save)
+var _execItems = [];   // filtered + sorted view for render (references into _planItems)
 var _saveTimer = null;
+var _currentView = 'gantt';
+var _currentDetailQ = null;
 
 function sb() {
   if (!_sb) {
@@ -191,8 +278,16 @@ function getUrlParam(name) {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
-function plannerHref() {
-  return 'implementation-planner.html?assessmentId=' + encodeURIComponent(_assessmentId || '');
+function planHref()    { return 'implementation-plan.html?assessmentId=' + encodeURIComponent(_assessmentId || ''); }
+
+function setSaveStatus(text, cls) {
+  var classes = 'ep-save-status' + (cls ? ' ' + cls : '');
+  ['ep-save-status', 'ep-save-status-foot'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = classes;
+  });
 }
 
 function showError(msg) {
@@ -206,65 +301,41 @@ function showGateBlock(msg) {
   document.getElementById('auth-loading').style.display = 'none';
   var el = document.getElementById('gate-block');
   document.getElementById('gate-block-msg').innerHTML =
-    esc(msg) + '<br><a href="' + plannerHref() + '">&larr; Back to the planner</a>';
+    esc(msg) + '<br><a href="' + planHref() + '">&larr; Back to the implementation plan</a>';
   el.style.display = 'block';
-}
-
-function setSaveStatus(text, cls) {
-  var classes = 'ip-save-status' + (cls ? ' ' + cls : '');
-  ['ip-save-status', 'ip-save-status-foot'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = text || '';
-    el.className = classes;
-  });
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 async function boot() {
   _assessmentId = getUrlParam('assessmentId');
-  if (!_assessmentId) {
-    showError('No assessment specified. Please open this page from the planner.');
-    return;
-  }
+  if (!_assessmentId) { showError('No assessment specified.'); return; }
 
   var sess = await sb().auth.getSession();
-  if (!sess.data || !sess.data.session) {
-    window.location.href = 'assessment.html';
-    return;
-  }
+  if (!sess.data || !sess.data.session) { window.location.href = 'assessment.html'; return; }
   _userId = sess.data.session.user.id;
 
-  // Wire back-to-planner links
-  document.getElementById('back-to-planner').href = plannerHref();
-  document.getElementById('footer-back').href = plannerHref();
+  document.getElementById('back-to-plan').href = planHref();
+  document.getElementById('footer-back').href = planHref();
 
   try {
     await loadAll();
   } catch (e) {
     console.error(e);
-    showError('Failed to load plan: ' + (e && e.message ? e.message : e));
+    showError('Failed to load execution plan: ' + (e && e.message ? e.message : e));
     return;
   }
 
-  // Gate: every included item must carry a priority 1/2/3, and at least one included.
-  var included = _planItems.filter(function(it) { return it.included; });
-  if (!included.length) {
-    showGateBlock('No sub-themes have been included yet.');
-    return;
-  }
-  var missing = included.filter(function(it) { return it.priority !== 1 && it.priority !== 2 && it.priority !== 3; });
-  if (missing.length) {
-    showGateBlock('Some included sub-themes are missing a priority. Set a priority for every included item before opening the plan.');
+  computeExecItems();
+  if (!_execItems.length) {
+    showGateBlock('No Planned items are ready for execution. Set every Planned sub-theme to include Owner, Start Date and End Date first.');
     return;
   }
 
   render();
   document.getElementById('auth-loading').style.display = 'none';
-  document.getElementById('plan-main').style.display = 'block';
+  document.getElementById('ep-main').style.display = 'block';
 }
 
-// ── Load everything in parallel ───────────────────────────────────────────────
 async function loadAll() {
   var results = await Promise.all([
     sb().from('questions').select('system, subtopic').order('sort_order', { ascending: true }),
@@ -280,15 +351,12 @@ async function loadAll() {
 
   _questions   = qRes.data || [];
   _growthSteps = gsRes.data || [];
+  document.getElementById('ep-a-name').textContent = aRes.data.name || '(untitled assessment)';
 
-  document.getElementById('ip-a-name').textContent = aRes.data.name || '(untitled assessment)';
-
-  // Hydrate items (normalise shape so status/owner/dates are always present).
   var rows = (pRes.data && pRes.data.items) ? pRes.data.items : [];
   var map = {};
   rows.forEach(function(r) { map[r.q_idx] = r; });
 
-  // We also need the latest answers to compute target_stage for growth-step lookup.
   var rec = JSON.parse(aRes.data.data);
   var versions = rec.versions || [];
   var latest = versions.length ? versions[versions.length - 1] : null;
@@ -312,45 +380,24 @@ async function loadAll() {
   });
 }
 
-function isExecutionReady() {
-  var plannedAny = false;
+function computeExecItems() {
+  _execItems = [];
   for (var i = 0; i < _planItems.length; i++) {
     var it = _planItems[i];
     if (!it.included) continue;
-    if (it.priority !== 1 && it.priority !== 2 && it.priority !== 3) continue;
     if (it.status !== 'planned') continue;
-    plannedAny = true;
-    if (!it.owner || !it.owner.trim()) return false;
-    if (!it.start_date) return false;
-    if (!it.end_date) return false;
+    if (it.priority !== 1 && it.priority !== 2 && it.priority !== 3) continue;
+    if (!it.owner || !it.owner.trim()) continue;
+    if (!it.start_date || !it.end_date) continue;
+    _execItems.push(i);
   }
-  return plannedAny;
-}
-
-function updateExecutionGate() {
-  var btn  = document.getElementById('create-exec-btn');
-  var hint = document.getElementById('create-exec-hint');
-  if (!btn || !hint) return;
-  var ready = isExecutionReady();
-  btn.disabled = !ready;
-  btn.classList.toggle('btn-accent',    ready);
-  btn.classList.toggle('btn-secondary', !ready);
-  if (ready) { hint.textContent = ''; return; }
-  var anyPlanned = false, missingFields = 0;
-  for (var i = 0; i < _planItems.length; i++) {
-    var it = _planItems[i];
-    if (!it.included || !(it.priority >= 1 && it.priority <= 3) || it.status !== 'planned') continue;
-    anyPlanned = true;
-    if (!it.owner || !it.owner.trim() || !it.start_date || !it.end_date) missingFields++;
-  }
-  hint.textContent = !anyPlanned
-    ? 'Switch at least one sub-theme to Planned to continue.'
-    : 'Fill in Owner, Start Date and End Date on every Planned item to continue (' + missingFields + ' incomplete).';
-}
-
-function openExecutionPlan() {
-  if (!isExecutionReady()) return;
-  window.location.href = 'execution-plan.html?assessmentId=' + encodeURIComponent(_assessmentId);
+  // Sort: priority asc, then start_date asc, then q_idx.
+  _execItems.sort(function(ai, bi) {
+    var a = _planItems[ai], b = _planItems[bi];
+    if (a.priority !== b.priority) return a.priority - b.priority;
+    if (a.start_date !== b.start_date) return a.start_date < b.start_date ? -1 : 1;
+    return a.q_idx - b.q_idx;
+  });
 }
 
 function getGrowthStep(qIdx) {
@@ -365,164 +412,344 @@ function getGrowthStep(qIdx) {
   return null;
 }
 
+// ── Date helpers (weeks are Monday-based) ────────────────────────────────────
+function parseDate(s) {
+  if (!s) return null;
+  var p = s.split('-');
+  return new Date(Date.UTC(parseInt(p[0],10), parseInt(p[1],10) - 1, parseInt(p[2],10)));
+}
+function mondayOf(d) {
+  // In UTC, ensure Monday = 1 ... Sunday = 0 -> adjust to Monday-start weeks.
+  var x = new Date(d.getTime());
+  var dow = x.getUTCDay();          // 0..6 (Sun..Sat)
+  var shift = (dow === 0) ? -6 : (1 - dow);
+  x.setUTCDate(x.getUTCDate() + shift);
+  x.setUTCHours(0,0,0,0);
+  return x;
+}
+function daysBetween(a, b) {
+  return Math.round((b.getTime() - a.getTime()) / 86400000);
+}
+function addDays(d, n) {
+  var x = new Date(d.getTime());
+  x.setUTCDate(x.getUTCDate() + n);
+  return x;
+}
+function fmtMonthDay(d) {
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getUTCMonth()] + ' ' + d.getUTCDate();
+}
+function fmtDateShort(s) {
+  var d = parseDate(s);
+  return d ? fmtMonthDay(d) + ', ' + d.getUTCFullYear() : '';
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
-  // Bucket included items by priority; preserve question sort_order within each bucket.
-  var buckets = { 1: [], 2: [], 3: [] };
-  for (var i = 0; i < _planItems.length; i++) {
-    var it = _planItems[i];
-    if (!it.included || !(it.priority === 1 || it.priority === 2 || it.priority === 3)) continue;
-    buckets[it.priority].push(i);
-  }
+  renderGantt();
+  renderKanban();
+}
 
-  var html = '';
+function renderGantt() {
+  // Compute timeline range: min start - 1 week, max end + 1 week, aligned to Monday.
+  var minStart = null, maxEnd = null;
+  for (var k = 0; k < _execItems.length; k++) {
+    var it = _planItems[_execItems[k]];
+    var s = parseDate(it.start_date), e = parseDate(it.end_date);
+    if (!s || !e) continue;
+    if (!minStart || s < minStart) minStart = s;
+    if (!maxEnd   || e > maxEnd)   maxEnd   = e;
+  }
+  if (!minStart || !maxEnd) {
+    document.getElementById('ep-gantt-scroll').innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);">No dated items to chart.</div>';
+    return;
+  }
+  var gridStart = addDays(mondayOf(minStart), -7);
+  var gridEnd   = addDays(mondayOf(maxEnd),    14); // +1 full week past the max-week
+  var totalDays = daysBetween(gridStart, gridEnd);
+  var totalWeeks = Math.ceil(totalDays / 7);
+
+  // Header
+  var hdrWeeks = '';
+  for (var w = 0; w < totalWeeks; w++) {
+    var weekStart = addDays(gridStart, w * 7);
+    hdrWeeks += '<div class="ep-hdr-week"><div class="ep-hdr-week-num">W' + (w + 1) + '</div><div class="ep-hdr-week-date">' + fmtMonthDay(weekStart) + '</div></div>';
+  }
+  var trackWidth = totalWeeks * WEEK_PX;
+
+  // Group by priority
+  var html = '<div class="ep-gantt">'
+           +   '<div class="ep-gantt-hdr">'
+           +     '<div class="ep-hdr-labels">Growth Step</div>'
+           +     '<div class="ep-hdr-weeks" style="width:' + trackWidth + 'px">' + hdrWeeks + '</div>'
+           +     '<div class="ep-hdr-labels" style="width:300px;border-left:1px solid rgba(248,246,241,0.15);border-right:none;">Status &amp; Actions</div>'
+           +   '</div>';
+
   [1, 2, 3].forEach(function(p) {
-    var indices = buckets[p];
-    if (!indices.length) return;
-    html += '<div class="ip-group">'
-         +   '<div class="ip-group-hdr">'
-         +     '<span class="ip-group-prio">Priority ' + p + '</span>'
-         +     '<span class="ip-group-count">' + indices.length + ' item' + (indices.length === 1 ? '' : 's') + '</span>'
-         +   '</div>';
-    for (var k = 0; k < indices.length; k++) {
-      html += renderRow(indices[k]);
+    var grp = _execItems.filter(function(i) { return _planItems[i].priority === p; });
+    if (!grp.length) return;
+    html += '<div class="ep-gantt-group">'
+         +    '<div class="ep-group-label">Priority ' + p + ' &middot; ' + grp.length + ' item' + (grp.length === 1 ? '' : 's') + '</div>';
+    for (var g = 0; g < grp.length; g++) {
+      html += renderGanttRow(grp[g], gridStart, totalDays, trackWidth);
     }
     html += '</div>';
   });
-  if (!html) html = '<div style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">No items in the plan yet.</div>';
 
-  document.getElementById('plan-groups').innerHTML = html;
-  wireRows();
-  updateExecutionGate();
+  html += '</div>';
+  document.getElementById('ep-gantt-scroll').innerHTML = html;
+  wireStatusButtons(document.getElementById('ep-gantt-scroll'));
+  wireDetailButtons(document.getElementById('ep-gantt-scroll'));
 }
 
-function renderRow(qIdx) {
-  var q = _questions[qIdx];
-  var item = _planItems[qIdx];
+function renderGanttRow(qIdx, gridStart, totalDays, trackWidth) {
+  var it = _planItems[qIdx];
+  var q  = _questions[qIdx];
   var gs = getGrowthStep(qIdx);
-  var color = SYS_COLORS[q.system] || '#555';
-
-  var stepTitle = gs ? esc(gs.title) : '<em style="color:var(--muted)">No growth step available</em>';
-  var isPlanned = item.status === 'planned';
-  var disabled = isPlanned ? '' : ' disabled';
-  var npCls = isPlanned ? '' : 'active np';
-  var plCls = isPlanned ? 'active pl' : '';
-
-  return '<div class="ip-row" data-q="' + qIdx + '">'
-       +   '<div class="ip-row-top">'
-       +     '<span class="ip-sys-chip" style="background:' + color + '">' + esc(q.system) + '</span>'
-       +     '<div class="ip-row-title">'
-       +       '<div class="ip-sub">' + esc(q.subtopic) + '</div>'
-       +       '<div class="ip-step">' + stepTitle + '</div>'
-       +     '</div>'
-       +     (gs ? '<div class="ip-row-detail"><button class="btn btn-sm btn-secondary ip-detail-btn" data-q="' + qIdx + '">Show Detail</button></div>' : '')
+  var sys = q.system, color = SYS_COLORS[sys] || '#555';
+  var s = parseDate(it.start_date), e = parseDate(it.end_date);
+  var off = daysBetween(gridStart, s);
+  var span = Math.max(1, daysBetween(s, e) + 1); // inclusive
+  var left  = (off  / totalDays) * trackWidth;
+  var width = (span / totalDays) * trackWidth;
+  var bar = '<div class="ep-bar ep-bar-' + shortStatus(it.execution_status) + '" style="left:' + left + 'px;width:' + width + 'px;">'
+          +   '<span>' + esc(fmtDateShort(it.start_date)) + ' &rarr; ' + esc(fmtDateShort(it.end_date)) + '</span>'
+          + '</div>';
+  var stepTitle = gs ? esc(gs.title) : '<em>(no growth step)</em>';
+  return '<div class="ep-gantt-row" data-q="' + qIdx + '">'
+       +   '<div class="ep-row-labels">'
+       +     '<span class="ep-row-sys" style="background:' + color + '">' + esc(shortSys(sys)) + '</span>'
+       +     '<div class="ep-row-sub">' + esc(q.subtopic) + '</div>'
+       +     '<div class="ep-row-step">' + stepTitle + '</div>'
+       +     '<div class="ep-row-meta">Owner: <b>' + esc(it.owner) + '</b></div>'
        +   '</div>'
-       +   '<div class="ip-row-body">'
-       +     '<div class="ip-status" role="group" aria-label="Status">'
-       +       '<button type="button" class="ip-status-btn np ' + npCls + '" data-q="' + qIdx + '" data-st="not_planned">Not Planned</button>'
-       +       '<button type="button" class="ip-status-btn pl ' + plCls + '" data-q="' + qIdx + '" data-st="planned">Planned</button>'
-       +     '</div>'
-       +     '<div class="ip-fields">'
-       +       '<div class="ip-field">'
-       +         '<label for="ip-owner-' + qIdx + '">Owner</label>'
-       +         '<input id="ip-owner-' + qIdx + '" type="text" class="ip-owner" data-q="' + qIdx + '" value="' + esc(item.owner) + '"' + disabled + ' placeholder="e.g. Jane Smith">'
-       +       '</div>'
-       +       '<div class="ip-field">'
-       +         '<label for="ip-start-' + qIdx + '">Start Date</label>'
-       +         '<input id="ip-start-' + qIdx + '" type="date" class="ip-start" data-q="' + qIdx + '" value="' + esc(item.start_date) + '"' + disabled + '>'
-       +       '</div>'
-       +       '<div class="ip-field">'
-       +         '<label for="ip-end-' + qIdx + '">End Date</label>'
-       +         '<input id="ip-end-' + qIdx + '" type="date" class="ip-end" data-q="' + qIdx + '" value="' + esc(item.end_date) + '"' + disabled + '>'
-       +       '</div>'
-       +     '</div>'
+       +   '<div class="ep-row-track" style="width:' + trackWidth + 'px">' + bar + '</div>'
+       +   '<div class="ep-row-actions">'
+       +     renderStatusButtons(qIdx)
+       +     '<button class="btn btn-secondary btn-sm ep-detail-btn" data-q="' + qIdx + '">Show Detail</button>'
        +   '</div>'
        + '</div>';
 }
 
-function wireRows() {
-  var root = document.getElementById('plan-groups');
+function renderKanban() {
+  var host = document.getElementById('ep-kanban');
+  var html = '';
+  STATUSES.forEach(function(st) {
+    var items = _execItems.filter(function(i) { return _planItems[i].execution_status === st.key; });
+    html += '<div class="ep-col">'
+         +    '<div class="ep-col-hdr ep-col-hdr-' + st.key + '">' + esc(st.label) + '<span class="ep-col-count">' + items.length + '</span></div>'
+         +    '<div class="ep-col-body">';
+    if (!items.length) {
+      html += '<div class="ep-col-empty">No items</div>';
+    } else {
+      for (var i = 0; i < items.length; i++) html += renderKanbanCard(items[i]);
+    }
+    html += '</div></div>';
+  });
+  host.innerHTML = html;
+  wireStatusButtons(host);
+  wireDetailButtons(host);
+}
 
-  root.querySelectorAll('.ip-status-btn').forEach(function(el) {
+function renderKanbanCard(qIdx) {
+  var it = _planItems[qIdx];
+  var q  = _questions[qIdx];
+  var gs = getGrowthStep(qIdx);
+  var sys = q.system, color = SYS_COLORS[sys] || '#555';
+  var stepTitle = gs ? esc(gs.title) : '<em>(no growth step)</em>';
+  return '<div class="ep-card" data-q="' + qIdx + '">'
+       +   '<div class="ep-card-hdr">'
+       +     '<span class="ep-row-sys" style="background:' + color + '">' + esc(shortSys(sys)) + '</span>'
+       +     '<span class="ep-card-prio">P' + it.priority + '</span>'
+       +   '</div>'
+       +   '<div class="ep-card-sub">' + esc(q.subtopic) + '</div>'
+       +   '<div class="ep-card-step">' + stepTitle + '</div>'
+       +   '<div class="ep-card-meta">Owner: <b>' + esc(it.owner) + '</b><br>' + esc(fmtDateShort(it.start_date)) + ' &rarr; ' + esc(fmtDateShort(it.end_date)) + '</div>'
+       +   '<div class="ep-card-actions">'
+       +     renderStatusButtons(qIdx)
+       +     '<button class="btn btn-secondary btn-sm ep-detail-btn" data-q="' + qIdx + '">Show Detail</button>'
+       +   '</div>'
+       + '</div>';
+}
+
+function renderStatusButtons(qIdx) {
+  var it = _planItems[qIdx];
+  var html = '<div class="ep-status-grp" role="radiogroup">';
+  STATUSES.forEach(function(st) {
+    var active = it.execution_status === st.key ? ' active ' + st.key : '';
+    html += '<button type="button" class="ep-status-btn' + active + '" data-q="' + qIdx + '" data-st="' + st.key + '" aria-pressed="' + (it.execution_status === st.key) + '">'
+         +    '<span class="ep-sdot ep-legend-' + shortStatus(st.key) + '"></span>'
+         +    '<span>' + esc(st.label) + '</span>'
+         +  '</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function shortStatus(key) {
+  return { not_started:'ns', on_track:'ot', delayed:'dl', completed:'cp' }[key] || 'ns';
+}
+function shortSys(full) {
+  // Strip leading "System N - " if present; keep the full name otherwise.
+  return full;
+}
+
+function wireStatusButtons(root) {
+  root.querySelectorAll('.ep-status-btn').forEach(function(el) {
     el.addEventListener('click', function() {
       var qIdx = parseInt(el.getAttribute('data-q'), 10);
       var next = el.getAttribute('data-st');
-      if (_planItems[qIdx].status === next) return;
-      _planItems[qIdx].status = next;
+      if (_planItems[qIdx].execution_status === next) return;
+      _planItems[qIdx].execution_status = next;
       render();
       queueSave();
     });
   });
+}
 
-  root.querySelectorAll('.ip-owner').forEach(function(el) {
-    el.addEventListener('input', function() {
-      var qIdx = parseInt(el.getAttribute('data-q'), 10);
-      _planItems[qIdx].owner = el.value;
-      updateExecutionGate();
-      queueSave();
-    });
-  });
-
-  root.querySelectorAll('.ip-start').forEach(function(el) {
-    el.addEventListener('change', function() {
-      var qIdx = parseInt(el.getAttribute('data-q'), 10);
-      _planItems[qIdx].start_date = el.value;
-      updateExecutionGate();
-      queueSave();
-    });
-  });
-
-  root.querySelectorAll('.ip-end').forEach(function(el) {
-    el.addEventListener('change', function() {
-      var qIdx = parseInt(el.getAttribute('data-q'), 10);
-      _planItems[qIdx].end_date = el.value;
-      updateExecutionGate();
-      queueSave();
-    });
-  });
-
-  root.querySelectorAll('.ip-detail-btn').forEach(function(el) {
+function wireDetailButtons(root) {
+  root.querySelectorAll('.ep-detail-btn').forEach(function(el) {
     el.addEventListener('click', function() {
       openDetail(parseInt(el.getAttribute('data-q'), 10));
     });
   });
 }
 
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.ep-tab').forEach(function(t) {
+  t.addEventListener('click', function() {
+    var view = t.getAttribute('data-view');
+    document.querySelectorAll('.ep-tab').forEach(function(x) { x.classList.toggle('active', x === t); });
+    document.querySelectorAll('.ep-view').forEach(function(v) {
+      v.classList.toggle('active', v.id === 'ep-view-' + view);
+    });
+    _currentView = view;
+  });
+});
+
 // ── Detail modal ──────────────────────────────────────────────────────────────
 function openDetail(qIdx) {
+  _currentDetailQ = qIdx;
   var q = _questions[qIdx];
   var gs = getGrowthStep(qIdx);
-  if (!gs) return;
-  document.getElementById('ip-dmod-sub').textContent = q.subtopic + ' \u00B7 ' + q.system;
-  document.getElementById('ip-dmod-title').textContent = gs.title;
+  document.getElementById('ep-dmod-sub').textContent = q.subtopic + ' \u00B7 ' + q.system;
+  document.getElementById('ep-dmod-title').textContent = gs ? gs.title : '(No growth step)';
   var body = '';
   function sec(label, val) {
     if (!val) return '';
-    return '<div class="ip-dmod-sec">'
-         +   '<div class="ip-dmod-lbl">' + esc(label) + '</div>'
-         +   '<div class="ip-dmod-val">' + esc(val) + '</div>'
+    return '<div class="ep-dmod-sec">'
+         +   '<div class="ep-dmod-lbl">' + esc(label) + '</div>'
+         +   '<div class="ep-dmod-val">' + esc(val) + '</div>'
          + '</div>';
   }
-  body += sec('Inputs Needed',                gs.inputs);
-  body += sec('Process Steps',                gs.process_steps);
-  body += sec('Outputs Generated',            gs.outputs);
-  body += sec('Tools / Templates / Training', gs.tools);
-  body += sec('Outcome KPIs',                 gs.kpis);
-  body += sec('Target Audience',              gs.audience);
-  body += sec('Time Required',                gs.time_required);
-  body += sec('Resources Involved',           gs.resources);
-  document.getElementById('ip-dmod-body').innerHTML = body;
+  if (gs) {
+    body += sec('Inputs Needed',                gs.inputs);
+    body += sec('Process Steps',                gs.process_steps);
+    body += sec('Outputs Generated',            gs.outputs);
+    body += sec('Tools / Templates / Training', gs.tools);
+    body += sec('Outcome KPIs',                 gs.kpis);
+    body += sec('Target Audience',              gs.audience);
+    body += sec('Time Required',                gs.time_required);
+    body += sec('Resources Involved',           gs.resources);
+  }
+  document.getElementById('ep-dmod-body').innerHTML = body;
   document.getElementById('detail-modal').classList.add('open');
 }
 
-document.getElementById('ip-dmod-close').addEventListener('click', function() {
+document.getElementById('ep-dmod-close').addEventListener('click', function() {
   document.getElementById('detail-modal').classList.remove('open');
+  _currentDetailQ = null;
 });
 document.getElementById('detail-modal').addEventListener('click', function(e) {
   if (e.target.id === 'detail-modal') {
     document.getElementById('detail-modal').classList.remove('open');
+    _currentDetailQ = null;
   }
 });
+
+// ── Resources modal ──────────────────────────────────────────────────────────
+document.getElementById('ep-dmod-res-btn').addEventListener('click', function() {
+  if (_currentDetailQ == null) return;
+  openResources(_currentDetailQ);
+});
+document.getElementById('ep-res-close').addEventListener('click', function() {
+  document.getElementById('res-modal').classList.remove('open');
+});
+document.getElementById('res-modal').addEventListener('click', function(e) {
+  if (e.target.id === 'res-modal') document.getElementById('res-modal').classList.remove('open');
+});
+
+async function openResources(qIdx) {
+  var q = _questions[qIdx];
+  var it = _planItems[qIdx];
+  var stage = it._answer ? (it._answer + 1) : null;
+  document.getElementById('ep-res-sub').textContent = q.subtopic + ' \u00B7 Stage ' + (stage || '?');
+  document.getElementById('ep-res-body').innerHTML = '<div class="ep-res-loading">Loading resources&hellip;</div>';
+  document.getElementById('res-modal').classList.add('open');
+
+  if (!stage) {
+    document.getElementById('ep-res-body').innerHTML = '<div class="ep-res-empty">No resources &mdash; this item has no forward stage.</div>';
+    return;
+  }
+
+  try {
+    // Subtopic-scoped resources for this stage. Using separate queries instead of
+    // .or() avoids the "&" / "," quoting pitfall documented in the Ringularity skill.
+    var mainQ = await sb().from('resources')
+      .select('id, title, description, file_type, folder_type, storage_path, active')
+      .eq('system_name', q.system)
+      .eq('subtopic', q.subtopic)
+      .eq('stage', stage)
+      .eq('active', true)
+      .order('folder_type', { ascending: true })
+      .order('title', { ascending: true });
+    if (mainQ.error) throw mainQ.error;
+    var rows = mainQ.data || [];
+    if (!rows.length) {
+      document.getElementById('ep-res-body').innerHTML = '<div class="ep-res-empty">No resources uploaded yet for <b>' + esc(q.subtopic) + '</b> at stage ' + stage + '.</div>';
+      return;
+    }
+    // Render rows as clickable items that fetch signed URLs on click.
+    var html = '';
+    rows.forEach(function(r) {
+      html += '<div class="ep-res-item" data-path="' + esc(r.storage_path) + '">'
+           +    '<div class="ep-res-icon">' + iconFor(r.file_type) + '</div>'
+           +    '<div class="ep-res-info">'
+           +      '<div class="ep-res-name">' + esc(r.title || '(untitled)') + '</div>'
+           +      '<div class="ep-res-meta">' + esc((r.folder_type || '') + (r.file_type ? ' \u00B7 ' + r.file_type.toUpperCase() : '')) + '</div>'
+           +    '</div>'
+           +  '</div>';
+    });
+    document.getElementById('ep-res-body').innerHTML = html;
+    document.getElementById('ep-res-body').querySelectorAll('.ep-res-item').forEach(function(el) {
+      el.addEventListener('click', async function() {
+        var path = el.getAttribute('data-path');
+        el.querySelector('.ep-res-meta').textContent = 'Opening\u2026';
+        var sign = await sb().storage.from('resources').createSignedUrl(path, 60 * 60);
+        if (sign.error || !sign.data) {
+          el.querySelector('.ep-res-meta').textContent = 'Failed to open: ' + (sign.error && sign.error.message ? sign.error.message : 'unknown error');
+          return;
+        }
+        window.open(sign.data.signedUrl, '_blank');
+        el.querySelector('.ep-res-meta').textContent = '';
+      });
+    });
+  } catch (e) {
+    console.error(e);
+    document.getElementById('ep-res-body').innerHTML = '<div class="ep-res-empty" style="color:#c0392b">Failed to load resources: ' + esc(e && e.message ? e.message : e) + '</div>';
+  }
+}
+
+function iconFor(ft) {
+  ft = (ft || '').toLowerCase();
+  if (ft === 'pdf')                       return '\uD83D\uDCC4';
+  if (ft === 'docx' || ft === 'doc')      return '\uD83D\uDCDD';
+  if (ft === 'xlsx' || ft === 'xls')      return '\uD83D\uDCCA';
+  if (ft === 'pptx' || ft === 'ppt')      return '\uD83D\uDCC8';
+  if (ft === 'mp4'  || ft === 'mov' || ft === 'video') return '\uD83C\uDFAC';
+  if (ft === 'image'|| ft === 'png' || ft === 'jpg' || ft === 'jpeg') return '\uD83D\uDDBC\uFE0F';
+  return '\uD83D\uDCC1';
+}
 
 // ── Save (debounced) ──────────────────────────────────────────────────────────
 function queueSave() {
@@ -533,7 +760,6 @@ function queueSave() {
 
 async function savePlan() {
   try {
-    // Strip transient fields before persisting.
     var persist = _planItems.map(function(it) {
       return {
         q_idx:            it.q_idx,

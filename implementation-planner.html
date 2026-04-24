@@ -274,16 +274,20 @@ async function loadAll() {
     var existing = map[i];
     var ans = _answers[i];
     var isDefault = (ans !== null && ans < 4 && ans === _minStage);
+    var es = existing && existing.execution_status;
+    var validEs = (es === 'not_started' || es === 'on_track' || es === 'delayed' || es === 'completed') ? es : 'not_started';
     return {
       q_idx: i,
       included: existing ? !!existing.included : isDefault,
       priority: (existing && (existing.priority === 1 || existing.priority === 2 || existing.priority === 3)) ? existing.priority : null,
-      // Execution-tracking fields — written by implementation-plan.html; preserved here
-      // on save so round-tripping through the planner never wipes them.
-      status:     (existing && existing.status === 'planned') ? 'planned' : 'not_planned',
-      owner:      (existing && typeof existing.owner === 'string') ? existing.owner : '',
-      start_date: (existing && typeof existing.start_date === 'string') ? existing.start_date : null,
-      end_date:   (existing && typeof existing.end_date === 'string') ? existing.end_date : null
+      // Execution-tracking fields — written by implementation-plan.html and
+      // execution-plan.html. Preserved here so round-tripping through the planner
+      // never wipes them.
+      status:           (existing && existing.status === 'planned') ? 'planned' : 'not_planned',
+      owner:            (existing && typeof existing.owner === 'string') ? existing.owner : '',
+      start_date:       (existing && typeof existing.start_date === 'string') ? existing.start_date : null,
+      end_date:         (existing && typeof existing.end_date === 'string') ? existing.end_date : null,
+      execution_status: validEs
     };
   });
 }
