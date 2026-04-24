@@ -935,6 +935,7 @@ body.rf-auth-state .progress-bar-wrap {
     <div class="gs-actions">
       <button class="btn-ghost" onclick="goHome()">&#8592; Home</button>
       <button class="btn btn-secondary btn-sm" onclick="goBackFromGrowthSteps()">&#8592; Back to Assessments</button>
+      <button class="btn btn-accent btn-sm" style="margin-left:auto" onclick="openImplementationPlanner()">&#x1F5C2;&#xFE0F; Open Implementation Planner &#8594;</button>
     </div>
     <div class="gs-sys-nav">
       <div class="gs-pills" id="gs-pills"></div>
@@ -2312,6 +2313,11 @@ function showGrowthSteps(assessmentId) {
   setProgress(1);
   renderGrowthStepsScreen();
   showScreen('screen-growth');
+}
+
+function openImplementationPlanner() {
+  if (!S.activeId) { alert('No assessment selected.'); return; }
+  window.location.href = 'implementation-planner.html?assessmentId=' + encodeURIComponent(S.activeId);
 }
 
 function renderGrowthStepsScreen() {
