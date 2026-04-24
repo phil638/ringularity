@@ -65,10 +65,14 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .ep-row-meta{font-size:0.72rem;color:var(--muted);}
 .ep-row-meta b{color:var(--ink);font-weight:600;}
 .ep-row-track{flex:1;min-width:0;position:relative;background:repeating-linear-gradient(to right,#fff 0 69px,#f4f0e8 69px 70px);}
-.ep-bar{position:absolute;top:14px;bottom:14px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:0.72rem;color:#fff;font-weight:600;letter-spacing:0.02em;overflow:hidden;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.12);}
+.ep-bar{position:absolute;top:8px;bottom:8px;border-radius:4px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:3px 8px;gap:1px;font-size:0.68rem;color:#fff;font-weight:600;letter-spacing:0.02em;overflow:hidden;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,0.12);cursor:pointer;transition:filter 0.12s;}
+.ep-bar:hover{filter:brightness(1.08);}
+.ep-bar-owner,.ep-bar-dates{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ep-bar-owner{font-weight:700;}
+.ep-bar-dates{font-weight:500;opacity:0.95;font-size:0.64rem;}
 .ep-bar-ns{background:var(--st-ns);} .ep-bar-ot{background:var(--st-ot);}
 .ep-bar-dl{background:var(--st-dl);} .ep-bar-cp{background:var(--st-cp);}
-.ep-row-actions{width:300px;flex-shrink:0;padding:10px 12px;border-left:1px solid var(--rule);background:#fafafa;display:flex;flex-direction:column;gap:8px;}
+.ep-row-actions{width:300px;flex-shrink:0;padding:10px 12px;border-right:1px solid var(--rule);background:#fafafa;display:flex;flex-direction:column;gap:8px;}
 .ep-status-grp{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;}
 .ep-status-btn{padding:5px 6px;font-size:0.72rem;font-weight:600;border:1px solid var(--rule);border-radius:4px;background:#fff;color:var(--muted);cursor:pointer;transition:all 0.12s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;}
 .ep-status-btn:hover{background:#f5f2ec;}
@@ -119,6 +123,24 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .ep-dmod-val{font-size:0.88rem;color:var(--ink);white-space:pre-line;line-height:1.55;}
 .ep-dmod-resources{margin-top:14px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
 .modal-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);}
+.ep-card-meta.ep-sched-open{cursor:pointer;border-radius:4px;padding:2px 4px;margin:0 -4px;transition:background 0.12s;}
+.ep-card-meta.ep-sched-open:hover{background:rgba(200,129,58,0.08);}
+.ep-sched-form{display:flex;flex-direction:column;gap:12px;margin-bottom:8px;}
+.ep-sched-field{display:flex;flex-direction:column;gap:4px;}
+.ep-sched-field label{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
+.ep-sched-field input{padding:8px 10px;border:1px solid var(--rule);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--ink);background:#fff;}
+.ep-sched-field input:focus{outline:none;border-color:var(--ink);}
+.ep-sched-hint{font-size:0.74rem;color:var(--muted);font-style:italic;margin-top:-4px;}
+.ep-sched-err{font-size:0.78rem;color:#c0392b;margin-top:4px;min-height:1em;}
+.ep-statpick{display:flex;flex-direction:column;gap:8px;}
+.ep-statpick-btn{padding:10px 14px;font-size:0.9rem;font-weight:600;border:1.5px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.12s;font-family:'DM Sans',sans-serif;}
+.ep-statpick-btn:hover{border-color:var(--ink);background:#fafafa;}
+.ep-statpick-btn.active{color:#fff;border-color:transparent;}
+.ep-statpick-btn.active.not_started{background:var(--st-ns);}
+.ep-statpick-btn.active.on_track{background:var(--st-ot);}
+.ep-statpick-btn.active.delayed{background:var(--st-dl);}
+.ep-statpick-btn.active.completed{background:var(--st-cp);}
+.ep-statpick-btn .ep-sdot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
 .ep-res-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--rule);border-radius:6px;margin-bottom:8px;background:#fafafa;transition:background 0.12s;}
 .ep-res-item:hover{background:#f0f4ff;cursor:pointer;}
 .ep-res-icon{width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;background:#eee;}
@@ -217,6 +239,46 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
   </div>
 </div>
 
+<!-- EDIT SCHEDULE MODAL (owner + dates) -->
+<div class="modal-ov modal-ov-top" id="sched-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="ep-dmod-sub" id="sched-sub">&mdash;</div>
+    <div class="ep-dmod-title" id="sched-title">Edit Schedule</div>
+    <div class="ep-sched-form">
+      <div class="ep-sched-field">
+        <label for="sched-owner">Owner</label>
+        <input id="sched-owner" type="text" placeholder="e.g. Jane Smith">
+      </div>
+      <div class="ep-sched-field">
+        <label for="sched-start">Start Date <span style="font-weight:500;opacity:0.75;text-transform:none;letter-spacing:0;font-size:0.7rem;">(Mondays)</span></label>
+        <input id="sched-start" type="date">
+      </div>
+      <div class="ep-sched-field">
+        <label for="sched-end">End Date <span style="font-weight:500;opacity:0.75;text-transform:none;letter-spacing:0;font-size:0.7rem;">(Fridays)</span></label>
+        <input id="sched-end" type="date">
+      </div>
+      <div class="ep-sched-hint">Start dates snap to the next Monday; end dates snap to the next Friday.</div>
+      <div class="ep-sched-err" id="sched-err"></div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-secondary" id="sched-cancel">Cancel</button>
+      <button class="btn btn-accent" id="sched-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE STATUS MODAL -->
+<div class="modal-ov modal-ov-top" id="status-modal">
+  <div class="modal" style="max-width:400px;">
+    <div class="ep-dmod-sub" id="status-sub">&mdash;</div>
+    <div class="ep-dmod-title">Update Status</div>
+    <div class="ep-statpick" id="status-picker"></div>
+    <div class="modal-acts">
+      <button class="btn btn-secondary" id="status-close">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>/* Supabase JS v2.49.4 — embedded inline, no CDN required */
 /**
  * Skipped minification because the original files appears to be already minified.
@@ -276,6 +338,38 @@ function esc(s) {
 function getUrlParam(name) {
   var m = location.search.match(new RegExp('[?&]' + name + '=([^&]+)'));
   return m ? decodeURIComponent(m[1]) : null;
+}
+
+// ── Date-snap helpers (mirror implementation-plan.html) ──────────────────────
+function parseISODate(s) {
+  if (!s) return null;
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return null;
+  return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+}
+function fmtISODate(d) {
+  var y = d.getUTCFullYear(), mo = d.getUTCMonth() + 1, da = d.getUTCDate();
+  return y + '-' + (mo < 10 ? '0' + mo : mo) + '-' + (da < 10 ? '0' + da : da);
+}
+function snapToWeekday(dateStr, targetDow) {
+  var d = parseISODate(dateStr);
+  if (!d) return dateStr;
+  var cur = d.getUTCDay();
+  var diff = (targetDow - cur + 7) % 7;
+  if (diff === 0) return dateStr;
+  d.setUTCDate(d.getUTCDate() + diff);
+  return fmtISODate(d);
+}
+function addOneMonth(dateStr) {
+  var d = parseISODate(dateStr);
+  if (!d) return dateStr;
+  d.setUTCMonth(d.getUTCMonth() + 1);
+  return fmtISODate(d);
+}
+function clampEndToStart(startStr, endStr) {
+  var s = parseISODate(startStr), e = parseISODate(endStr);
+  if (!s || !e) return endStr;
+  return e < s ? startStr : endStr;
 }
 
 function planHref()    { return 'implementation-plan.html?assessmentId=' + encodeURIComponent(_assessmentId || ''); }
@@ -391,11 +485,11 @@ function computeExecItems() {
     if (!it.start_date || !it.end_date) continue;
     _execItems.push(i);
   }
-  // Sort: priority asc, then start_date asc, then q_idx.
+  // Sort: priority asc, then canonical question order (which already reflects the
+  // System 1 -> 5 sequence and the sub-theme order within each system).
   _execItems.sort(function(ai, bi) {
     var a = _planItems[ai], b = _planItems[bi];
     if (a.priority !== b.priority) return a.priority - b.priority;
-    if (a.start_date !== b.start_date) return a.start_date < b.start_date ? -1 : 1;
     return a.q_idx - b.q_idx;
   });
 }
@@ -480,9 +574,9 @@ function renderGantt() {
   // Group by priority
   var html = '<div class="ep-gantt">'
            +   '<div class="ep-gantt-hdr">'
+           +     '<div class="ep-hdr-labels" style="width:300px;">Status &amp; Actions</div>'
            +     '<div class="ep-hdr-labels">Growth Step</div>'
            +     '<div class="ep-hdr-weeks" style="width:' + trackWidth + 'px">' + hdrWeeks + '</div>'
-           +     '<div class="ep-hdr-labels" style="width:300px;border-left:1px solid rgba(248,246,241,0.15);border-right:none;">Status &amp; Actions</div>'
            +   '</div>';
 
   [1, 2, 3].forEach(function(p) {
@@ -512,22 +606,28 @@ function renderGanttRow(qIdx, gridStart, totalDays, trackWidth) {
   var span = Math.max(1, daysBetween(s, e) + 1); // inclusive
   var left  = (off  / totalDays) * trackWidth;
   var width = (span / totalDays) * trackWidth;
-  var bar = '<div class="ep-bar ep-bar-' + shortStatus(it.execution_status) + '" style="left:' + left + 'px;width:' + width + 'px;">'
-          +   '<span>' + esc(fmtDateShort(it.start_date)) + ' &rarr; ' + esc(fmtDateShort(it.end_date)) + '</span>'
+  var dateRange = fmtDateShort(it.start_date) + ' \u2192 ' + fmtDateShort(it.end_date);
+  var barTitle = it.owner + ' \u00B7 ' + dateRange;
+  // Bar wraps internally (flex-column); narrow bars fall back to the title tooltip.
+  // Click anywhere on the bar opens the Edit Schedule modal.
+  var bar = '<div class="ep-bar ep-bar-' + shortStatus(it.execution_status) + ' ep-sched-open" '
+          +    'style="left:' + left + 'px;width:' + width + 'px;" '
+          +    'title="' + esc(barTitle) + '" data-q="' + qIdx + '">'
+          +   '<span class="ep-bar-owner">' + esc(it.owner) + '</span>'
+          +   '<span class="ep-bar-dates">' + esc(dateRange) + '</span>'
           + '</div>';
   var stepTitle = gs ? esc(gs.title) : '<em>(no growth step)</em>';
   return '<div class="ep-gantt-row" data-q="' + qIdx + '">'
-       +   '<div class="ep-row-labels">'
-       +     '<span class="ep-row-sys" style="background:' + color + '">' + esc(shortSys(sys)) + '</span>'
-       +     '<div class="ep-row-sub">' + esc(q.subtopic) + '</div>'
-       +     '<div class="ep-row-step">' + stepTitle + '</div>'
-       +     '<div class="ep-row-meta">Owner: <b>' + esc(it.owner) + '</b></div>'
-       +   '</div>'
-       +   '<div class="ep-row-track" style="width:' + trackWidth + 'px">' + bar + '</div>'
        +   '<div class="ep-row-actions">'
        +     renderStatusButtons(qIdx)
        +     '<button class="btn btn-secondary btn-sm ep-detail-btn" data-q="' + qIdx + '">Show Detail</button>'
        +   '</div>'
+       +   '<div class="ep-row-labels">'
+       +     '<span class="ep-row-sys" style="background:' + color + '">' + esc(shortSys(sys)) + '</span>'
+       +     '<div class="ep-row-sub">' + esc(q.subtopic) + '</div>'
+       +     '<div class="ep-row-step">' + stepTitle + '</div>'
+       +   '</div>'
+       +   '<div class="ep-row-track" style="width:' + trackWidth + 'px">' + bar + '</div>'
        + '</div>';
 }
 
@@ -564,9 +664,11 @@ function renderKanbanCard(qIdx) {
        +   '</div>'
        +   '<div class="ep-card-sub">' + esc(q.subtopic) + '</div>'
        +   '<div class="ep-card-step">' + stepTitle + '</div>'
-       +   '<div class="ep-card-meta">Owner: <b>' + esc(it.owner) + '</b><br>' + esc(fmtDateShort(it.start_date)) + ' &rarr; ' + esc(fmtDateShort(it.end_date)) + '</div>'
+       +   '<div class="ep-card-meta ep-sched-open" data-q="' + qIdx + '" title="Click to edit owner and dates">'
+       +     'Owner: <b>' + esc(it.owner) + '</b><br>' + esc(fmtDateShort(it.start_date)) + ' &rarr; ' + esc(fmtDateShort(it.end_date))
+       +   '</div>'
        +   '<div class="ep-card-actions">'
-       +     renderStatusButtons(qIdx)
+       +     '<button class="btn btn-secondary btn-sm ep-status-open" data-q="' + qIdx + '">Update Status</button>'
        +     '<button class="btn btn-secondary btn-sm ep-detail-btn" data-q="' + qIdx + '">Show Detail</button>'
        +   '</div>'
        + '</div>';
@@ -613,7 +715,103 @@ function wireDetailButtons(root) {
       openDetail(parseInt(el.getAttribute('data-q'), 10));
     });
   });
+  // Edit Schedule openers (Gantt bars + Kanban meta lines).
+  root.querySelectorAll('.ep-sched-open').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openSchedModal(parseInt(el.getAttribute('data-q'), 10));
+    });
+  });
+  // Update Status openers (Kanban cards).
+  root.querySelectorAll('.ep-status-open').forEach(function(el) {
+    el.addEventListener('click', function() {
+      openStatusModal(parseInt(el.getAttribute('data-q'), 10));
+    });
+  });
 }
+
+// ── Edit Schedule modal ──────────────────────────────────────────────────────
+var _schedQ = null;
+function openSchedModal(qIdx) {
+  _schedQ = qIdx;
+  var it = _planItems[qIdx];
+  var q  = _questions[qIdx];
+  document.getElementById('sched-sub').textContent = q.subtopic + ' \u00B7 ' + q.system;
+  document.getElementById('sched-owner').value = it.owner || '';
+  document.getElementById('sched-start').value = it.start_date || '';
+  document.getElementById('sched-end').value   = it.end_date || '';
+  document.getElementById('sched-err').textContent = '';
+  document.getElementById('sched-modal').classList.add('open');
+  setTimeout(function() { document.getElementById('sched-owner').focus(); }, 30);
+}
+function closeSchedModal() {
+  document.getElementById('sched-modal').classList.remove('open');
+  _schedQ = null;
+}
+document.getElementById('sched-cancel').addEventListener('click', closeSchedModal);
+document.getElementById('sched-modal').addEventListener('click', function(e) {
+  if (e.target.id === 'sched-modal') closeSchedModal();
+});
+document.getElementById('sched-save').addEventListener('click', function() {
+  if (_schedQ == null) return;
+  var owner = document.getElementById('sched-owner').value.trim();
+  var startRaw = document.getElementById('sched-start').value;
+  var endRaw   = document.getElementById('sched-end').value;
+  var err = document.getElementById('sched-err');
+  err.textContent = '';
+  if (!owner) { err.textContent = 'Owner is required.'; return; }
+  if (!startRaw) { err.textContent = 'Start date is required.'; return; }
+  if (!endRaw)   { err.textContent = 'End date is required.'; return; }
+  var start = snapToWeekday(startRaw, 1);
+  var end   = snapToWeekday(endRaw, 5);
+  var clamped = clampEndToStart(start, end);
+  if (clamped !== end) end = snapToWeekday(clamped, 5);
+  var it = _planItems[_schedQ];
+  it.owner = owner;
+  it.start_date = start;
+  it.end_date = end;
+  closeSchedModal();
+  computeExecItems();   // re-sort after date/owner changes
+  render();
+  queueSave();
+});
+
+// ── Update Status modal ─────────────────────────────────────────────────────
+var _statusQ = null;
+function openStatusModal(qIdx) {
+  _statusQ = qIdx;
+  var it = _planItems[qIdx];
+  var q  = _questions[qIdx];
+  document.getElementById('status-sub').textContent = q.subtopic + ' \u00B7 ' + q.system;
+  var picker = document.getElementById('status-picker');
+  var html = '';
+  STATUSES.forEach(function(st) {
+    var active = it.execution_status === st.key ? ' active ' + st.key : '';
+    html += '<button type="button" class="ep-statpick-btn' + active + '" data-st="' + st.key + '">'
+         +    '<span class="ep-sdot ep-legend-' + shortStatus(st.key) + '"></span>'
+         +    '<span>' + esc(st.label) + '</span>'
+         +  '</button>';
+  });
+  picker.innerHTML = html;
+  picker.querySelectorAll('.ep-statpick-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (_statusQ == null) return;
+      _planItems[_statusQ].execution_status = btn.getAttribute('data-st');
+      closeStatusModal();
+      render();
+      queueSave();
+    });
+  });
+  document.getElementById('status-modal').classList.add('open');
+}
+function closeStatusModal() {
+  document.getElementById('status-modal').classList.remove('open');
+  _statusQ = null;
+}
+document.getElementById('status-close').addEventListener('click', closeStatusModal);
+document.getElementById('status-modal').addEventListener('click', function(e) {
+  if (e.target.id === 'status-modal') closeStatusModal();
+});
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.ep-tab').forEach(function(t) {

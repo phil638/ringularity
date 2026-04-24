@@ -53,6 +53,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 @media(max-width:720px){.ip-fields{grid-template-columns:1fr;}}
 .ip-field{display:flex;flex-direction:column;gap:3px;}
 .ip-field label{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
+.ip-field-hint{font-weight:500;color:var(--muted);opacity:0.75;text-transform:none;letter-spacing:0;font-size:0.7rem;margin-left:2px;}
 .ip-field input{padding:7px 10px;border:1px solid var(--rule);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.86rem;color:var(--ink);background:#fff;}
 .ip-field input:focus{outline:none;border-color:var(--ink);}
 .ip-field input:disabled{background:#f5f5f5;color:#aaa;cursor:not-allowed;}
@@ -189,6 +190,42 @@ function esc(s) {
 function getUrlParam(name) {
   var m = location.search.match(new RegExp('[?&]' + name + '=([^&]+)'));
   return m ? decodeURIComponent(m[1]) : null;
+}
+
+// ── Date-snap helpers ─────────────────────────────────────────────────────────
+// UTC-based to avoid local-timezone DST/offset surprises from <input type="date">.
+function parseISODate(s) {
+  if (!s) return null;
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return null;
+  return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+}
+function fmtISODate(d) {
+  var y = d.getUTCFullYear(), mo = d.getUTCMonth() + 1, da = d.getUTCDate();
+  return y + '-' + (mo < 10 ? '0' + mo : mo) + '-' + (da < 10 ? '0' + da : da);
+}
+// Forward-snap to target weekday. targetDow: 0=Sun..6=Sat (so Mon=1, Fri=5).
+function snapToWeekday(dateStr, targetDow) {
+  var d = parseISODate(dateStr);
+  if (!d) return dateStr;
+  var cur = d.getUTCDay();
+  var diff = (targetDow - cur + 7) % 7;
+  if (diff === 0) return dateStr;
+  d.setUTCDate(d.getUTCDate() + diff);
+  return fmtISODate(d);
+}
+function addOneMonth(dateStr) {
+  var d = parseISODate(dateStr);
+  if (!d) return dateStr;
+  d.setUTCMonth(d.getUTCMonth() + 1);
+  return fmtISODate(d);
+}
+// Ensure end >= start; if strictly earlier, bump end to the start date (caller
+// applies the Friday-snap afterwards).
+function clampEndToStart(startStr, endStr) {
+  var s = parseISODate(startStr), e = parseISODate(endStr);
+  if (!s || !e) return endStr;
+  return e < s ? startStr : endStr;
 }
 
 function plannerHref() {
@@ -428,11 +465,11 @@ function renderRow(qIdx) {
        +         '<input id="ip-owner-' + qIdx + '" type="text" class="ip-owner" data-q="' + qIdx + '" value="' + esc(item.owner) + '"' + disabled + ' placeholder="e.g. Jane Smith">'
        +       '</div>'
        +       '<div class="ip-field">'
-       +         '<label for="ip-start-' + qIdx + '">Start Date</label>'
+       +         '<label for="ip-start-' + qIdx + '">Start Date <span class="ip-field-hint">(Mondays)</span></label>'
        +         '<input id="ip-start-' + qIdx + '" type="date" class="ip-start" data-q="' + qIdx + '" value="' + esc(item.start_date) + '"' + disabled + '>'
        +       '</div>'
        +       '<div class="ip-field">'
-       +         '<label for="ip-end-' + qIdx + '">End Date</label>'
+       +         '<label for="ip-end-' + qIdx + '">End Date <span class="ip-field-hint">(Fridays)</span></label>'
        +         '<input id="ip-end-' + qIdx + '" type="date" class="ip-end" data-q="' + qIdx + '" value="' + esc(item.end_date) + '"' + disabled + '>'
        +       '</div>'
        +     '</div>'
@@ -466,7 +503,21 @@ function wireRows() {
   root.querySelectorAll('.ip-start').forEach(function(el) {
     el.addEventListener('change', function() {
       var qIdx = parseInt(el.getAttribute('data-q'), 10);
-      _planItems[qIdx].start_date = el.value;
+      var raw = el.value;
+      if (!raw) { _planItems[qIdx].start_date = ''; render(); queueSave(); return; }
+      // Snap start to next Monday (1 = Monday).
+      var snapped = snapToWeekday(raw, 1);
+      _planItems[qIdx].start_date = snapped;
+      // If end is missing, default to +1 month from start, snapped to Friday.
+      // If end is earlier than the new start, bump it and re-snap to Friday.
+      var cur = _planItems[qIdx].end_date;
+      if (!cur) {
+        _planItems[qIdx].end_date = snapToWeekday(addOneMonth(snapped), 5);
+      } else {
+        var clamped = clampEndToStart(snapped, cur);
+        if (clamped !== cur) _planItems[qIdx].end_date = snapToWeekday(clamped, 5);
+      }
+      render();           // re-render so the snapped value shows in the inputs
       updateExecutionGate();
       queueSave();
     });
@@ -475,7 +526,17 @@ function wireRows() {
   root.querySelectorAll('.ip-end').forEach(function(el) {
     el.addEventListener('change', function() {
       var qIdx = parseInt(el.getAttribute('data-q'), 10);
-      _planItems[qIdx].end_date = el.value;
+      var raw = el.value;
+      if (!raw) { _planItems[qIdx].end_date = ''; render(); queueSave(); return; }
+      var snapped = snapToWeekday(raw, 5);  // 5 = Friday
+      // If the result lands before start, push end forward to start (then re-snap).
+      var startStr = _planItems[qIdx].start_date;
+      if (startStr) {
+        var clamped = clampEndToStart(startStr, snapped);
+        if (clamped !== snapped) snapped = snapToWeekday(clamped, 5);
+      }
+      _planItems[qIdx].end_date = snapped;
+      render();
       updateExecutionGate();
       queueSave();
     });
