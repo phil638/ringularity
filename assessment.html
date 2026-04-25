@@ -1629,7 +1629,8 @@ function setProgress(pct) {
 // ════════════════════════════════════════════════
 // LANDING
 // ════════════════════════════════════════════════
-function showNewSetup() {
+async function showNewSetup() {
+  // Render immediately with whatever's already loaded so the screen feels snappy.
   populateNewSetupClientSelector();
   // Default the assessment date to today, but leave it editable.
   var dateEl = document.getElementById('new-date');
@@ -1639,6 +1640,18 @@ function showNewSetup() {
     dateEl.value = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
   }
   showScreen('screen-new-setup');
+  // Self-heal: if the clients list is empty (race with afterLogin's parallel
+  // loads, or a transient earlier failure) and we have a live session, refetch
+  // and re-render the dropdown. Without this, a user who clicks fast lands on
+  // an empty client picker and has no way to recover other than a page reload.
+  if ((!_availableClients || _availableClients.length === 0) && currentUserId()) {
+    try {
+      await loadAvailableClients();
+      populateNewSetupClientSelector();
+    } catch (e) {
+      console.warn('showNewSetup: client reload failed:', e);
+    }
+  }
 }
 
 // Role-aware client picker for the New Assessment form.
