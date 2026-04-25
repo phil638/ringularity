@@ -2319,13 +2319,20 @@ function showGrowthSteps(assessmentId) {
 
 async function openImplementationPlanner() {
   if (!S.activeId) { alert('No assessment selected.'); return; }
-  // The dbUpsert -> sbUpsert chain is fire-and-forget, so a freshly-finished
-  // assessment may not yet be in Supabase. The planner reads it from
-  // Supabase, so explicitly await one upsert here to close the race.
+  if (!currentUserId()) { alert('You appear to be signed out. Please sign in again before opening the planner.'); return; }
   var rec = dbGet(S.activeId);
-  if (rec) {
-    try { await sbUpsert(rec); }
-    catch (e) { console.warn('Pre-navigation sync failed:', e); }
+  if (!rec) { alert('Assessment not found in local storage. Please reopen it from the assessments list.'); return; }
+
+  // The planner reads from Supabase, so push this assessment first and only
+  // navigate once we know the row landed. If the upsert fails, surface the
+  // real error rather than the cryptic 'not found in Supabase' downstream.
+  var res;
+  try { res = await sbUpsert(rec); }
+  catch (e) { res = { error: { message: (e && e.message) || String(e) } }; }
+  if (res && res.error) {
+    var msg = (res.error.message || res.error.details || JSON.stringify(res.error));
+    alert('Could not sync this assessment to the server before opening the planner.\n\nError: ' + msg + '\n\nPlease share this exact message if you need help diagnosing.');
+    return;
   }
   window.location.href = 'implementation-planner.html?assessmentId=' + encodeURIComponent(S.activeId);
 }
@@ -2651,8 +2658,16 @@ async function sbFetchAll() {
 }
 
 // ── Push one record ───────────────────────────────────────────────────────────
+// Returns { error } so callers that care (e.g. before navigating to a page that
+// reads from Supabase) can detect and surface failures rather than relying on
+// fire-and-forget semantics. Existing call sites still work — they just ignore
+// the return value.
 async function sbUpsert(rec) {
-  if (!currentUserId()) return;
+  if (!currentUserId()) {
+    var noSess = { error: { message: 'No active Supabase session — please sign in again.' } };
+    console.warn('sbUpsert skipped:', noSess.error.message);
+    return noSess;
+  }
   var row = {
     id:         rec.id,
     user_id:    currentUserId(),
@@ -2665,6 +2680,7 @@ async function sbUpsert(rec) {
   if (rec.assessmentDate) row.assessment_date = rec.assessmentDate;
   var res = await sbClient().from('assessments').upsert(row, { onConflict: 'id' });
   if (res.error) console.warn('sbUpsert error:', res.error);
+  return res;
 }
 
 // ── Delete one record ─────────────────────────────────────────────────────────
