@@ -584,7 +584,7 @@ async function loadAll() {
   var results = await Promise.all([
     sb().from('questions').select('system, subtopic').order('sort_order', { ascending: true }),
     sb().from('growth_steps').select('system, subtopic, target_stage, title, inputs, process_steps, outputs, tools, kpis, audience, time_required, resources').order('sort_order', { ascending: true }),
-    sb().from('assessments').select('id, name, data').eq('id', _assessmentId).single(),
+    sb().from('assessments').select('id, name, data').eq('id', _assessmentId).maybeSingle(),
     sb().from('implementation_plans').select('items').eq('assessment_id', _assessmentId).maybeSingle()
   ]);
   var qRes = results[0], gsRes = results[1], aRes = results[2], pRes = results[3];
@@ -592,6 +592,9 @@ async function loadAll() {
   if (gsRes.error) throw gsRes.error;
   if (aRes.error)  throw aRes.error;
   if (pRes.error)  throw pRes.error;
+  if (!aRes.data) {
+    throw new Error("Assessment not found in Supabase. It may not have synced from this device yet — go back to the assessment, reopen it, then try again.");
+  }
 
   _questions   = qRes.data || [];
   _growthSteps = gsRes.data || [];
