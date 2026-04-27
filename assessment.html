@@ -358,7 +358,9 @@ body.rf-bg { color: #f5f2ec; }
   position: relative;
   margin: 0 auto 28px;
   display: inline-block;
+  cursor: pointer;
 }
+.rf-logo-wrap:hover .rf-logo-img { filter: brightness(1.05); }
 .rf-logo-ring {
   position: absolute;
   inset: -24px;
@@ -712,7 +714,7 @@ body.rf-auth-state .progress-bar-wrap {
 <!-- SCREEN: SET PASSWORD (used for invite + password reset links) -->
 <div id="screen-set-password" class="screen rf-dark">
   <div class="rf-stage">
-    <div class="rf-logo-wrap" style="margin-bottom:36px;">
+    <div class="rf-logo-wrap" onclick="logoClick()" title="Back to Ringularity home" style="margin-bottom:36px;">
       <div class="rf-logo-ring"></div>
       <img class="rf-logo-img" src="Tree_professional.jpg" alt="Ringularity" width="200" height="200">
     </div>
@@ -736,7 +738,7 @@ body.rf-auth-state .progress-bar-wrap {
 <!-- SCREEN: AUTH -->
 <div id="screen-auth" class="screen rf-dark">
   <div class="rf-stage">
-    <div class="rf-logo-wrap" style="margin-bottom:36px;">
+    <div class="rf-logo-wrap" onclick="logoClick()" title="Back to Ringularity home" style="margin-bottom:36px;">
       <div class="rf-logo-ring"></div>
       <img class="rf-logo-img" src="Tree_professional.jpg" alt="Ringularity" width="200" height="200">
     </div>
@@ -761,7 +763,7 @@ body.rf-auth-state .progress-bar-wrap {
 <div id="screen-select" class="screen rf-dark">
   <div class="rf-stage">
     <p class="rf-slogan-above">Nurturing future-ready, high-performing organisations<br>that will thrive in change</p>
-    <div class="rf-logo-wrap">
+    <div class="rf-logo-wrap" onclick="logoClick()" title="Back to Ringularity home">
       <div class="rf-logo-ring"></div>
       <img class="rf-logo-img" src="Tree_professional.jpg" alt="Ringularity" width="200" height="200">
     </div>
