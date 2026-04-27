@@ -189,6 +189,39 @@
   nav a:hover { color: var(--gold-lt); }
   nav a:hover::after { transform: scaleX(1); }
 
+  /* ── Tile grid (replaces the text nav at the bottom of the hero) ── */
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+    width: 100%;
+    max-width: 940px;
+    margin: 24px auto 0;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 1.6s;
+  }
+  .tile {
+    display: block;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    background: transparent;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .tile:hover, .tile:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+    outline: none;
+  }
+  .tile img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+  }
+  @media (max-width: 720px) { .tile-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; } }
+  @media (max-width: 380px) { .tile-grid { grid-template-columns: 1fr; } }
+
   .nav-sep {
     display: flex;
     align-items: center;
@@ -377,14 +410,19 @@
 
   <div class="divider"></div>
 
-  <nav>
-    <a href="about.html">About Us</a>
-    <span class="nav-sep">&middot;</span>
-    <a href="services.html">Our Services</a>
-    <span class="nav-sep">&middot;</span>
-    <a href="assessment.html">Client Console</a>
-    <span class="nav-sep">&middot;</span>
-    <a href="#contact" onclick="openContact(); return false;">Contact</a>
+  <nav class="tile-grid" aria-label="Primary">
+    <a class="tile" href="about.html" aria-label="About Us">
+      <img src="title_about.png" alt="About Us" width="600" height="540" loading="lazy">
+    </a>
+    <a class="tile" href="services.html" aria-label="Our Services">
+      <img src="title_services.png" alt="Our Services" width="600" height="540" loading="lazy">
+    </a>
+    <a class="tile" href="assessment.html" aria-label="Client Console">
+      <img src="title_console.png" alt="Client Console" width="600" height="540" loading="lazy">
+    </a>
+    <a class="tile" href="#contact" onclick="openContact(); return false;" aria-label="Contact Us">
+      <img src="title_contact.png" alt="Contact Us" width="600" height="540" loading="lazy">
+    </a>
   </nav>
 
 </div>
