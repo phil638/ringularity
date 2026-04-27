@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ringularity &ndash; Growth Steps Assessment</title>
+<meta name="description" content="Ringularity Growth Steps Assessment — sign in to run, review and update assessments.">
+<link rel="canonical" href="https://ringularity.net/assessment">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#1a1a2e;--paper:#f8f6f1;--accent:#c8813a;--accent2:#2d6a4f;--muted:#6b6b7a;--rule:#e0ddd6;--germination:#c0392b;--growth-ph:#e67e22;--maturity-ph:#2980b9;--renewal:#27ae60;--firefight:#c0392b;--align:#e67e22;--systemize:#2980b9;--future:#27ae60;--selected-bg:#1a1a2e;--card-shadow:0 2px 12px rgba(26,26,46,0.08);--radius:6px;}
@@ -687,7 +689,7 @@ body.rf-auth-state .progress-bar-wrap {
   <div class="logo-area" onclick="logoClick()" style="cursor:pointer;" title="Back to ringularity.net home">
     <div class="logo-ring-wrap">
       <div class="logo-ring"></div>
-      <img src="Tree_professional.jpg" class="logo-img" alt="Ringularity">
+      <img src="Tree_professional.jpg" class="logo-img" alt="Ringularity" width="54" height="54">
     </div>
     <div class="logo-text">
       <span class="logo-brand">RINGULARITY</span>
@@ -712,18 +714,18 @@ body.rf-auth-state .progress-bar-wrap {
   <div class="rf-stage">
     <div class="rf-logo-wrap" style="margin-bottom:36px;">
       <div class="rf-logo-ring"></div>
-      <img class="rf-logo-img" src="Tree_professional.jpg" alt="Ringularity">
+      <img class="rf-logo-img" src="Tree_professional.jpg" alt="Ringularity" width="200" height="200">
     </div>
     <div class="rf-auth-card">
       <h2 class="rf-auth-title">Set Your Password</h2>
       <p class="rf-auth-sub">Choose a password to complete your account setup.</p>
       <div class="rf-auth-error" id="sp-error"></div>
       <div class="rf-auth-field">
-        <label>New Password</label>
+        <label for="sp-pass">New Password</label>
         <input type="password" id="sp-pass" placeholder="At least 8 characters">
       </div>
       <div class="rf-auth-field">
-        <label>Confirm Password</label>
+        <label for="sp-pass2">Confirm Password</label>
         <input type="password" id="sp-pass2" placeholder="Repeat password">
       </div>
       <button class="rf-auth-btn" id="sp-btn" data-action="set-password">Set Password &amp; Sign In</button>
@@ -736,18 +738,18 @@ body.rf-auth-state .progress-bar-wrap {
   <div class="rf-stage">
     <div class="rf-logo-wrap" style="margin-bottom:36px;">
       <div class="rf-logo-ring"></div>
-      <img class="rf-logo-img" src="Tree_professional.jpg" alt="Ringularity">
+      <img class="rf-logo-img" src="Tree_professional.jpg" alt="Ringularity" width="200" height="200">
     </div>
     <div class="rf-auth-card">
       <h2 class="rf-auth-title">Sign In</h2>
       <p class="rf-auth-sub">Access is by invitation only. Check your email for a setup link.</p>
       <div class="rf-auth-error" id="auth-error"></div>
       <div class="rf-auth-field">
-        <label>Email</label>
+        <label for="si-email">Email</label>
         <input type="email" id="si-email" placeholder="you@example.com" data-action="clear-error">
       </div>
       <div class="rf-auth-field">
-        <label>Password</label>
+        <label for="si-pass">Password</label>
         <input type="password" id="si-pass" placeholder="Your password" data-action="clear-error">
       </div>
       <button class="rf-auth-btn" id="si-btn" data-action="sign-in">Sign In</button>
@@ -761,7 +763,7 @@ body.rf-auth-state .progress-bar-wrap {
     <p class="rf-slogan-above">Nurturing future-ready, high-performing organisations<br>that will thrive in change</p>
     <div class="rf-logo-wrap">
       <div class="rf-logo-ring"></div>
-      <img class="rf-logo-img" src="Tree_professional.jpg" alt="Ringularity">
+      <img class="rf-logo-img" src="Tree_professional.jpg" alt="Ringularity" width="200" height="200">
     </div>
     <p class="rf-slogan-below">Through a people-centred transformation system</p>
     <div class="rf-divider"></div>
@@ -801,7 +803,7 @@ body.rf-auth-state .progress-bar-wrap {
 <!-- SCREEN: LANDING -->
 <div id="screen-landing" class="screen">
   <div class="lp-wrap">
-    <img src="Tree_professional.jpg" class="lp-logo" alt="Ringularity">
+    <img src="Tree_professional.jpg" class="lp-logo" alt="Ringularity" width="130" height="130">
     <h1 class="lp-title">Growth Steps Assessment</h1>
 
     <div class="lp-user-bar" id="lp-user-bar" style="display:none;">
@@ -845,21 +847,21 @@ body.rf-auth-state .progress-bar-wrap {
       <h3>New Assessment</h3>
       <p class="fw-sub">Give this assessment a name &#8212; for example, your organisation&#8217;s name, a department, or a date-based label.</p>
       <div class="field">
-        <label>Client *</label>
+        <label for="new-client">Client *</label>
         <select id="new-client" class="form-select"></select>
         <div id="new-client-readonly" style="display:none;font-size:0.95rem;padding:10px 12px;background:var(--rule);border-radius:4px;color:var(--ink);font-weight:600;"></div>
         <div id="new-client-empty" style="display:none;font-size:0.85rem;color:var(--accent);margin-top:6px;">You are not yet assigned to a client. Ask an admin to assign one before starting an assessment.</div>
       </div>
       <div class="field">
-        <label>Assessment Name *</label>
+        <label for="new-name">Assessment Name *</label>
         <input type="text" id="new-name" placeholder="e.g. Ringularity HQ &#8211; Q3 2026" maxlength="80">
       </div>
       <div class="field">
-        <label>Assessment Date *</label>
+        <label for="new-date">Assessment Date *</label>
         <input type="date" id="new-date">
       </div>
       <div class="field">
-        <label>Assessor *</label>
+        <label for="new-assessor">Assessor *</label>
         <input type="text" id="new-assessor" placeholder="e.g. Jane Smith" maxlength="60">
       </div>
       <div class="btn-row">
@@ -954,9 +956,9 @@ body.rf-auth-state .progress-bar-wrap {
 </div>
 
 <!-- MODAL: DELETE CONFIRM -->
-<div class="modal-ov" id="delete-modal">
+<div class="modal-ov" id="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
   <div class="modal">
-    <h3>&#x26A0;&#xFE0F; Permanently Delete?</h3>
+    <h3 id="delete-modal-title">&#x26A0;&#xFE0F; Permanently Delete?</h3>
     <p class="modal-q">This cannot be undone.</p>
     <p class="modal-body">Are you sure you want to permanently delete <strong id="del-modal-name"></strong>?</p>
     <div class="modal-acts">
@@ -1058,7 +1060,7 @@ body.rf-auth-state .progress-bar-wrap {
 </div>
 
 <!-- MODAL: RESOURCES -->
-<div class="modal-ov" id="res-modal">
+<div class="modal-ov" id="res-modal" role="dialog" aria-modal="true" aria-label="Resources">
   <div class="modal" style="max-width:600px;width:95%;">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px;">
       <div>
@@ -1076,7 +1078,7 @@ body.rf-auth-state .progress-bar-wrap {
 </div>
 
 <!-- MODAL: COMMENT -->
-<div class="modal-ov" id="comment-modal">
+<div class="modal-ov" id="comment-modal" role="dialog" aria-modal="true" aria-label="Add a comment">
   <div class="modal">
     <h3>Add a Comment</h3>
     <p class="modal-q" id="modal-q-text"></p>
@@ -1089,7 +1091,7 @@ body.rf-auth-state .progress-bar-wrap {
 </div>
 
 <!-- MODAL: VIEW COMMENT -->
-<div class="modal-ov" id="view-comment-modal">
+<div class="modal-ov" id="view-comment-modal" role="dialog" aria-modal="true" aria-label="View comment">
   <div class="modal">
     <h3>Comment</h3>
     <p class="modal-q" id="view-modal-q"></p>
