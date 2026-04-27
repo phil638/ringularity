@@ -859,7 +859,7 @@ body.rf-auth-state .progress-bar-wrap {
         <input type="date" id="new-date">
       </div>
       <div class="field">
-        <label>Assessor (optional)</label>
+        <label>Assessor *</label>
         <input type="text" id="new-assessor" placeholder="e.g. Jane Smith" maxlength="60">
       </div>
       <div class="btn-row">
@@ -1639,6 +1639,11 @@ async function showNewSetup() {
     var pad = function(n) { return (n < 10 ? '0' : '') + n; };
     dateEl.value = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
   }
+  // Default Assessor to the current user's display name (editable).
+  var assessorEl = document.getElementById('new-assessor');
+  if (assessorEl && !assessorEl.value) {
+    assessorEl.value = currentUserName() || '';
+  }
   showScreen('screen-new-setup');
   // Self-heal: if the clients list is empty (race with afterLogin's parallel
   // loads, or a transient earlier failure) and we have a live session, refetch
@@ -1745,7 +1750,14 @@ function startNew() {
   }
   dateEl.classList.remove('error');
 
-  var assessor = document.getElementById('new-assessor').value.trim();
+  var assessorEl = document.getElementById('new-assessor');
+  var assessor = assessorEl.value.trim();
+  if (!assessor) {
+    assessorEl.classList.add('error');
+    assessorEl.focus();
+    return;
+  }
+  assessorEl.classList.remove('error');
   var id = genId();
   var rec = { id: id, name: name, assessor: assessor, assessmentDate: assessmentDate, clientId: clientId, clientName: clientName, createdAt: Date.now(), status: 'draft', versions: [] };
   dbUpsert(rec);
@@ -1896,16 +1908,26 @@ function openUpdate(id) {
   var latest = source.versions.length ? source.versions[source.versions.length - 1] : null;
   var newId  = genId();
 
-  // New record inherits all prior versions so history travels with it
+  // New record inherits all prior versions so history travels with it.
+  // It also inherits the client + assessment date from the source so:
+  //   (a) non-admin users with user_clients access keep seeing it
+  //       (RLS on assessments uses client_id),
+  //   (b) the past-assessments list shows the right client name as the
+  //       row header, and
+  //   (c) the openImplementationPlanner upsert doesn't strand the row
+  //       with a NULL client_id.
   var newRec = {
-    id:        newId,
-    name:      newName,
-    baseName:  baseName,
-    updateNum: nextNum,
-    assessor:  source.assessor,
-    createdAt: Date.now(),
-    status:    'draft',
-    versions:  source.versions.map(function(v) { return JSON.parse(JSON.stringify(v)); })
+    id:             newId,
+    name:           newName,
+    baseName:       baseName,
+    updateNum:      nextNum,
+    assessor:       source.assessor,
+    clientId:       source.clientId       || source.client_id       || null,
+    clientName:     source.clientName     || null,
+    assessmentDate: source.assessmentDate || null,
+    createdAt:      Date.now(),
+    status:         'draft',
+    versions:       source.versions.map(function(v) { return JSON.parse(JSON.stringify(v)); })
   };
   dbUpsert(newRec);
 
