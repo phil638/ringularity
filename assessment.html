@@ -1610,8 +1610,16 @@ function goBackFromGrowthSteps() {
 }
 
 function logoClick() {
-  // Clicking the Ringularity logo always returns to the marketing site (index).
-  window.location.href = '/';
+  // Top-level screens (not signed in or just-signed-in landing) -> marketing
+  // home. Inside the console hierarchy -> the in-app landing (screen-select),
+  // not all the way out to index.
+  var active = document.querySelector('.screen.active');
+  var topLevel = { 'screen-auth': 1, 'screen-set-password': 1, 'screen-select': 1 };
+  if (!active || topLevel[active.id]) {
+    window.location.href = '/';
+    return;
+  }
+  goHome();
 }
 
 function goHome() {
