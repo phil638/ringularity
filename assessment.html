@@ -77,7 +77,25 @@ body.rf-auth-state .screen .lp-wrap,body.rf-auth-state .screen .sub-wrap{backgro
 .pi-meta{font-size:0.75rem;color:var(--muted);margin-top:2px;}
 .pi-score{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--accent);min-width:50px;text-align:center;}
 .pi-score small{display:block;font-size:0.62rem;font-family:'DM Sans',sans-serif;color:var(--muted);font-weight:400;}
-.pi-actions{display:flex;gap:8px;flex-shrink:0;}
+.pi-actions{display:flex;gap:8px;flex-shrink:0;align-items:center;}
+/* Client filter at the top of the Past page */
+.past-filter{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:10px 14px;background:#fff;border:1px solid var(--rule);border-radius:var(--radius);box-shadow:var(--card-shadow);}
+.past-filter label{font-size:0.72rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);}
+.past-filter select{flex:1;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:4px;padding:6px 10px;cursor:pointer;}
+.past-filter select:focus{outline:none;border-color:var(--ink);}
+/* Per-row actions dropdown */
+.row-actions{position:relative;display:inline-block;}
+.row-actions-btn{padding:6px 14px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;border:1.5px solid var(--rule);background:#fff;color:var(--ink);transition:all 0.12s;}
+.row-actions-btn:hover{border-color:var(--ink);}
+.row-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:240px;background:#fff;border:1px solid var(--rule);border-radius:6px;box-shadow:0 10px 28px rgba(26,26,46,0.18);padding:4px 0;z-index:90;display:none;}
+.row-menu.open{display:block;}
+.row-menu-item{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:0.84rem;color:var(--ink);cursor:pointer;background:none;border:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif;}
+.row-menu-item:hover:not(.disabled){background:var(--paper);}
+.row-menu-item.disabled{color:var(--muted);cursor:not-allowed;opacity:0.55;}
+.row-menu-item .rm-icon{width:18px;display:inline-block;text-align:center;}
+.row-menu-divider{height:1px;background:var(--rule);margin:4px 0;}
+.row-menu-item.danger{color:#c0392b;}
+.row-menu-item.danger:hover:not(.disabled){background:#fcebea;}
 .mchip{display:inline-block;padding:2px 9px;border-radius:11px;font-size:0.67rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#fff;margin-top:4px;}
 .no-past{text-align:center;padding:44px;color:var(--muted);}
 .no-past .np-icon{font-size:2.8rem;margin-bottom:10px;}
@@ -824,8 +842,8 @@ body.rf-auth-state .progress-bar-wrap {
       </div>
       <div class="lp-card" onclick="showPast()">
         <span class="lc-icon">&#x1F4CB;</span>
-        <h2>Review / Update Existing</h2>
-        <p>View summaries of previous assessments, track your Growth Phase journey over time, or update existing answers.</p>
+        <h2>Review, Update, Plan &amp; Execute</h2>
+        <p>View summaries, update answers, and progress your assessments through the Implementation Planner, Plan and Execution Plan.</p>
         <span class="lc-cta">View Past &#8594;</span>
       </div>
     </div>
@@ -880,7 +898,13 @@ body.rf-auth-state .progress-bar-wrap {
     <button class="btn-ghost" onclick="goHome()" style="margin-bottom:20px">&#8592; Back to Home</button>
     <div class="past-wrap">
       <h3>Past Assessments</h3>
-      <p class="past-sub">Select an assessment to review its results or update it with new answers.</p>
+      <p class="past-sub">Pick a client to filter, then open results, update, plan or execute.</p>
+      <div class="past-filter">
+        <label for="past-client-filter">Client</label>
+        <select id="past-client-filter" onchange="onPastClientFilterChange()">
+          <option value="">All clients</option>
+        </select>
+      </div>
       <div class="past-list" id="past-list"></div>
     </div>
   </div>
@@ -1713,9 +1737,121 @@ function populateNewSetupClientSelector() {
   }
 }
 
-function showPast() {
-  renderPastList();
+async function showPast() {
+  populatePastClientFilter();
   showScreen('screen-past');
+  await renderPastList();
+}
+
+// Populate the Past page's client filter. Admin / multi-client users get
+// "All clients" + every available client alphabetically. A single-client
+// user gets just their one client (no "All" option needed).
+function populatePastClientFilter() {
+  var sel = document.getElementById('past-client-filter');
+  if (!sel) return;
+  var prev = sel.value;
+  sel.innerHTML = '';
+  var clients = (_availableClients || []).slice();
+  if (clients.length === 1) {
+    var only = clients[0];
+    var opt = document.createElement('option');
+    opt.value = only.id; opt.textContent = only.name;
+    sel.appendChild(opt);
+    sel.value = only.id;
+    return;
+  }
+  var allOpt = document.createElement('option');
+  allOpt.value = ''; allOpt.textContent = 'All clients';
+  sel.appendChild(allOpt);
+  clients.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
+  clients.forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+  sel.value = (prev && clients.some(function(c){ return c.id === prev; })) ? prev : '';
+}
+
+function onPastClientFilterChange() { renderPastList(); }
+
+// Fetch implementation_plans rows for a list of assessment ids in one query.
+async function loadPlansForAssessments(assessmentIds) {
+  if (!assessmentIds || !assessmentIds.length) return {};
+  var res = await sbClient().from('implementation_plans')
+    .select('assessment_id, items')
+    .in('assessment_id', assessmentIds);
+  if (res.error) { console.warn('loadPlansForAssessments:', res.error); return {}; }
+  var map = {};
+  (res.data || []).forEach(function(r) { map[r.assessment_id] = r; });
+  return map;
+}
+
+// Compute readiness flags for the per-row actions dropdown.
+//   planner   — assessment is complete (caller's pre-condition)
+//   plan      — at least one Included item carries a priority 1/2/3
+//   execution — every Planned item has Owner + Start + End populated
+function assessmentReadiness(rec, planRow) {
+  var complete = rec && rec.status === 'complete';
+  if (!complete) return { planner: false, plan: false, execution: false };
+  var items = (planRow && Array.isArray(planRow.items)) ? planRow.items : [];
+  var anyIncluded = false, allIncludedHavePrio = true;
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    if (!it || !it.included) continue;
+    anyIncluded = true;
+    if (it.priority !== 1 && it.priority !== 2 && it.priority !== 3) allIncludedHavePrio = false;
+  }
+  var plan = anyIncluded && allIncludedHavePrio;
+  var anyPlanned = false, allPlannedComplete = true;
+  for (var j = 0; j < items.length; j++) {
+    var p = items[j];
+    if (!p || !p.included) continue;
+    if (p.priority !== 1 && p.priority !== 2 && p.priority !== 3) continue;
+    if (p.status !== 'planned') continue;
+    anyPlanned = true;
+    if (!p.owner || !String(p.owner).trim()) allPlannedComplete = false;
+    if (!p.start_date) allPlannedComplete = false;
+    if (!p.end_date) allPlannedComplete = false;
+  }
+  var execution = anyPlanned && allPlannedComplete;
+  return { planner: true, plan: plan, execution: execution };
+}
+
+// Per-row dropdown menu — open one at a time, close on outside click.
+function toggleRowMenu(id) {
+  var menu = document.getElementById('row-menu-' + id);
+  if (!menu) return;
+  var wasOpen = menu.classList.contains('open');
+  document.querySelectorAll('.row-menu').forEach(function(m) { m.classList.remove('open'); });
+  if (!wasOpen) menu.classList.add('open');
+}
+document.addEventListener('click', function(e) {
+  if (e.target.closest && e.target.closest('.row-actions')) return;
+  document.querySelectorAll('.row-menu.open').forEach(function(m) { m.classList.remove('open'); });
+});
+
+// Navigators used from the Past page rows. The Planner navigator awaits an
+// explicit sbUpsert (matches openImplementationPlanner) to close the
+// fire-and-forget sync race; Plan and Execution rely on the readiness gate
+// already implying the row is in Supabase, so they navigate directly.
+async function openPlannerFromList(id) {
+  if (!currentUserId()) { alert('You appear to be signed out. Please sign in again.'); return; }
+  var rec = dbGet(id);
+  if (!rec) { alert('Assessment not found in local storage. Please reopen it.'); return; }
+  var res;
+  try { res = await sbUpsert(rec); }
+  catch (e) { res = { error: { message: (e && e.message) || String(e) } }; }
+  if (res && res.error) {
+    alert('Could not sync this assessment to the server before opening the planner.\n\nError: ' + (res.error.message || res.error.details || JSON.stringify(res.error)));
+    return;
+  }
+  window.location.href = 'implementation-planner.html?assessmentId=' + encodeURIComponent(id);
+}
+function openPlanFromList(id) {
+  window.location.href = 'implementation-plan.html?assessmentId=' + encodeURIComponent(id);
+}
+function openExecutionPlanFromList(id) {
+  window.location.href = 'execution-plan.html?assessmentId=' + encodeURIComponent(id);
 }
 
 // ════════════════════════════════════════════════
@@ -1789,10 +1925,9 @@ function startNew() {
 // ════════════════════════════════════════════════
 // PAST LIST
 // ════════════════════════════════════════════════
-function renderPastList() {
-  // Sort: group by family (baseName), newest family first, updates ascending within family
+async function renderPastList() {
+  // Sort: group by family (baseName), newest family first, updates ascending within family.
   var all = dbLoad();
-  // Build ordered list: for each family, show original first then updates oldest→newest
   var families = {};
   var familyOrder = [];
   for (var fi = 0; fi < all.length; fi++) {
@@ -1801,61 +1936,101 @@ function renderPastList() {
     if (!families[bn]) { families[bn] = []; familyOrder.push(bn); }
     families[bn].push(rec);
   }
-  // Sort each family by createdAt ascending (original first, updates in order)
   for (var fn in families) {
-    families[fn].sort(function(a,b){ return a.createdAt - b.createdAt; });
+    families[fn].sort(function(a, b) { return a.createdAt - b.createdAt; });
   }
-  // Sort families by the createdAt of their LATEST member, newest family first
-  familyOrder.sort(function(a,b){
-    var aLatest = families[a][families[a].length-1].createdAt;
-    var bLatest = families[b][families[b].length-1].createdAt;
+  familyOrder.sort(function(a, b) {
+    var aLatest = families[a][families[a].length - 1].createdAt;
+    var bLatest = families[b][families[b].length - 1].createdAt;
     return bLatest - aLatest;
   });
-  // Flatten: for each family show original then updates (oldest→newest), with divider between families
-  var all = [];
+  var sorted = [];
   for (var fo = 0; fo < familyOrder.length; fo++) {
     var fam = families[familyOrder[fo]];
-    for (var fm = 0; fm < fam.length; fm++) { all.push(fam[fm]); }
+    for (var fm = 0; fm < fam.length; fm++) { sorted.push(fam[fm]); }
   }
+
+  // Apply client filter (single-select dropdown above the list).
+  var filterSel = document.getElementById('past-client-filter');
+  var filterId  = filterSel ? filterSel.value : '';
+  var visible   = filterId
+    ? sorted.filter(function(a) { return (a.clientId || a.client_id) === filterId; })
+    : sorted;
+
   var el = document.getElementById('past-list');
-  if (!all.length) {
-    el.innerHTML = '<div class="no-past"><div class="np-icon">📭</div><p>No assessments yet. Start a new one from the home screen.</p></div>';
+  if (!visible.length) {
+    var msg = filterId ? 'No assessments for this client yet.' : 'No assessments yet. Start a new one from the home screen.';
+    el.innerHTML = '<div class="no-past"><div class="np-icon">📭</div><p>' + esc(msg) + '</p></div>';
     return;
   }
+
+  // Pre-fetch implementation_plans for the COMPLETE visible assessments in
+  // one query so we can compute readiness flags for the per-row dropdown.
+  var ids = visible.filter(function(a) { return a.status === 'complete'; }).map(function(a) { return a.id; });
+  var plansMap = await loadPlansForAssessments(ids);
+
   var html = '';
-  for (var pi = 0; pi < all.length; pi++) {
-    var a = all[pi];
-    var latest = a.versions.length ? a.versions[a.versions.length - 1] : null;
-    var score = latest ? latest.answers.reduce(function(s,v){ return s + (v||0); }, 0) : 0;
-    var pct = Math.round(score / MAX_SCORE * 100);
-    var mat = matInfo(score / MAX_SCORE);
+  for (var pi = 0; pi < visible.length; pi++) {
+    var a       = visible[pi];
+    var latest  = a.versions.length ? a.versions[a.versions.length - 1] : null;
+    var score   = latest ? latest.answers.reduce(function(s, v) { return s + (v || 0); }, 0) : 0;
     var created = fmtDate(a.createdAt);
     var updated = latest ? fmtDate(latest.completedAt) : created;
-    var vcount = a.versions.length;
+    var vcount  = a.versions.length;
     var draftTag = a.status === 'draft' ? ' <span style="font-size:0.68rem;color:#e67e22;font-weight:600">[Draft]</span>' : '';
     var clientName = resolveClientName(a);
+    var ready   = assessmentReadiness(a, plansMap[a.id]);
+
     html += '<div class="past-item">'
           + '<div class="pi-info">'
-          + '<div class="pi-name">' + esc(clientName || 'Unassigned') + '</div>'
-          + '<div class="pi-assess">' + esc(a.name)
-          + (a.updateNum ? ' <span class="update-badge">Update ' + a.updateNum + '</span>' : '')
-          + draftTag + '</div>'
-          + (a.baseName && a.baseName !== a.name ? '<div class="pi-family">&#8627; ' + esc(a.baseName) + '</div>' : '')
-          + '<div class="pi-meta">Created ' + created + ' &middot; Updated ' + updated
-          + ' &middot; ' + vcount + ' version' + (vcount !== 1 ? 's' : '')
-          + (a.assessor ? ' &middot; ' + esc(a.assessor) : '') + '</div>'
+          +   '<div class="pi-name">' + esc(clientName || 'Unassigned') + '</div>'
+          +   '<div class="pi-assess">' + esc(a.name)
+          +     (a.updateNum ? ' <span class="update-badge">Update ' + a.updateNum + '</span>' : '')
+          +     draftTag
+          +   '</div>'
+          +   (a.baseName && a.baseName !== a.name ? '<div class="pi-family">&#8627; ' + esc(a.baseName) + '</div>' : '')
+          +   '<div class="pi-meta">Created ' + created + ' &middot; Updated ' + updated
+          +   ' &middot; ' + vcount + ' version' + (vcount !== 1 ? 's' : '')
+          +   (a.assessor ? ' &middot; ' + esc(a.assessor) : '') + '</div>'
           + '</div>'
           + '<div class="pi-score">' + score + '<small>/ ' + MAX_SCORE + '</small></div>'
-          + '<div class="pi-actions">'
-          + '<button class="btn btn-secondary btn-sm" onclick="openReview(\'' + a.id + '\')">&#128065; Review</button>'
-          + '<button class="btn btn-accent btn-sm" onclick="openUpdate(\'' + a.id + '\')">&#9998; Update</button>'
-          + (a.status === 'complete' ? '<button class="btn btn-secondary btn-sm" onclick="showGrowthSteps(\'' + a.id + '\')" title="View Growth Steps">&#x1F331; Growth Steps</button>' : '')
-          + '<button class="btn btn-sm btn-delete" onclick="confirmDelete(\'' + a.id + '\',\'' + escAttr(a.name) + '\')" title="Delete this assessment">&#x1F5D1;</button>'
-          + '</div>'
+          + '<div class="pi-actions">' + rowActionsMarkup(a, ready) + '</div>'
           + '</div>';
   }
-  // Add family dividers via CSS (handled by pi-family class)
   el.innerHTML = html;
+}
+
+// Build the per-row "Open ▾" dropdown markup (single button + floating menu).
+// Inactive items use the disabled attribute and carry a tooltip explaining
+// what's still missing.
+function rowActionsMarkup(a, ready) {
+  var id   = a.id;
+  var name = escAttr(a.name);
+  function item(active, label, icon, onclickAttr, tipIfDisabled) {
+    var disabledAttr = active ? '' : ' disabled';
+    var titleAttr    = active ? '' : (' title="' + escAttr(tipIfDisabled || '') + '"');
+    var cls = 'row-menu-item' + (active ? '' : ' disabled');
+    return '<button type="button" class="' + cls + '"' + disabledAttr + titleAttr + ' onclick="' + onclickAttr + '">'
+         +   '<span class="rm-icon">' + icon + '</span>' + label
+         + '</button>';
+  }
+  var menuId = 'row-menu-' + id;
+  return '<div class="row-actions">'
+       +   '<button type="button" class="row-actions-btn" onclick="toggleRowMenu(\'' + id + '\')">Open &#9662;</button>'
+       +   '<div class="row-menu" id="' + menuId + '">'
+       +     item(true,             'Results',                '&#x1F4CA;', "openReview('"             + id + "')", null)
+       +     item(true,             'Update',                 '&#9998;',   "openUpdate('"             + id + "')", null)
+       +     '<div class="row-menu-divider"></div>'
+       +     item(ready.planner,    'Growth Steps',           '&#x1F331;', "showGrowthSteps('"        + id + "')", 'Available once the assessment is marked complete.')
+       +     item(ready.planner,    'Implementation Planner', '&#x1F5C2;&#xFE0F;', "openPlannerFromList('"    + id + "')", 'Available once the assessment is marked complete.')
+       +     item(ready.plan,       'Implementation Plan',    '&#x1F4C5;', "openPlanFromList('"       + id + "')", 'Available once the planner has at least one Included sub-theme with a priority.')
+       +     item(ready.execution,  'Execution Plan',         '&#x1F4C8;', "openExecutionPlanFromList('" + id + "')", 'Available once every Planned item has Owner, Start and End dates.')
+       +     '<div class="row-menu-divider"></div>'
+       +     '<button type="button" class="row-menu-item danger" onclick="confirmDelete(\'' + id + '\',\'' + name + '\')">'
+       +       '<span class="rm-icon">&#x1F5D1;</span>Delete'
+       +     '</button>'
+       +   '</div>'
+       + '</div>';
 }
 
 function esc(s) {
