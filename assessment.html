@@ -946,6 +946,7 @@ body.rf-auth-state .progress-bar-wrap {
     <div class="r-actions">
       <button class="btn btn-primary" onclick="toggleAllCmts()">&#x1F4AC; Show / Hide All Comments</button>
       <button class="btn btn-accent" id="btn-growth-steps" style="display:none">&#x1F331; Growth Steps</button>
+      <button class="btn btn-accent" id="btn-impl-workspace" style="display:none" onclick="openImplementationPlanner()">&#x1F5C2;&#xFE0F; Implementation Workspace</button>
       <button class="btn btn-secondary" onclick="window.print()">&#x1F5A8; Print</button>
       <button class="btn btn-accent" id="btn-switch-update" onclick="switchToUpdate()" style="display:none">&#9998; Update This Assessment</button>
       <button class="btn-ghost" onclick="goHome()">&#8592; Home</button>
@@ -1853,13 +1854,13 @@ async function openPlannerFromList(id) {
     alert('Could not sync this assessment to the server before opening the planner.\n\nError: ' + (res.error.message || res.error.details || JSON.stringify(res.error)));
     return;
   }
-  window.location.href = 'implementation-planner.html?assessmentId=' + encodeURIComponent(id);
+  window.location.href = 'implementation-workspace.html?assessmentId=' + encodeURIComponent(id) + '#prioritise';
 }
 function openPlanFromList(id) {
-  window.location.href = 'implementation-plan.html?assessmentId=' + encodeURIComponent(id);
+  window.location.href = 'implementation-workspace.html?assessmentId=' + encodeURIComponent(id) + '#schedule';
 }
 function openExecutionPlanFromList(id) {
-  window.location.href = 'execution-plan.html?assessmentId=' + encodeURIComponent(id);
+  window.location.href = 'implementation-workspace.html?assessmentId=' + encodeURIComponent(id) + '#execute';
 }
 
 // ════════════════════════════════════════════════
@@ -2342,11 +2343,15 @@ function buildResults(assessment, version) {
   var mat   = matInfo(pct);
   var dateStr = fmtDate(version.completedAt);
 
-  // Show growth steps button if we have answers
+  // Show growth steps + workspace buttons if we have answers
   var gsBtn = document.getElementById('btn-growth-steps');
   if (gsBtn) {
     gsBtn.onclick = function() { showGrowthSteps(assessment.id); };
     gsBtn.style.display = 'inline-block';
+  }
+  var iwBtn = document.getElementById('btn-impl-workspace');
+  if (iwBtn) {
+    iwBtn.style.display = 'inline-block';
   }
   document.getElementById('r-aname').textContent = assessment.name + (assessment.assessor ? ' — ' + assessment.assessor : '');
   document.getElementById('r-date').textContent  = 'Completed ' + dateStr + (assessment.versions.length > 1 ? '  ·  Version ' + assessment.versions.length : '');
@@ -2553,7 +2558,7 @@ async function openImplementationPlanner() {
   var rec = dbGet(S.activeId);
   if (!rec) { alert('Assessment not found in local storage. Please reopen it from the assessments list.'); return; }
 
-  // The planner reads from Supabase, so push this assessment first and only
+  // The workspace reads from Supabase, so push this assessment first and only
   // navigate once we know the row landed. If the upsert fails, surface the
   // real error rather than the cryptic 'not found in Supabase' downstream.
   var res;
@@ -2561,10 +2566,10 @@ async function openImplementationPlanner() {
   catch (e) { res = { error: { message: (e && e.message) || String(e) } }; }
   if (res && res.error) {
     var msg = (res.error.message || res.error.details || JSON.stringify(res.error));
-    alert('Could not sync this assessment to the server before opening the planner.\n\nError: ' + msg + '\n\nPlease share this exact message if you need help diagnosing.');
+    alert('Could not sync this assessment to the server before opening the workspace.\n\nError: ' + msg + '\n\nPlease share this exact message if you need help diagnosing.');
     return;
   }
-  window.location.href = 'implementation-planner.html?assessmentId=' + encodeURIComponent(S.activeId);
+  window.location.href = 'implementation-workspace.html?assessmentId=' + encodeURIComponent(S.activeId) + '#prioritise';
 }
 
 function renderGrowthStepsScreen() {
@@ -3043,6 +3048,7 @@ async function adminViewAssessment(assessmentId, userId) {
   document.getElementById('btn-switch-update').style.display = 'none';
   document.getElementById('btn-growth-steps').style.display  = 'inline-block';
   document.getElementById('btn-growth-steps').onclick = function() { showGrowthSteps(assessmentId); };
+  document.getElementById('btn-impl-workspace').style.display = 'inline-block';
   setHeaderAssessment(a.name + '  \u2014  ' + (a.assessor || a._ownerName || ''));
   setProgress(1);
   showScreen('screen-results');
