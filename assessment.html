@@ -345,6 +345,10 @@ body.rf-auth-state .screen .lp-wrap,body.rf-auth-state .screen .sub-wrap{backgro
 .select-signout a:hover{text-decoration:underline;}
 
 /* ══ RINGULARITY FOREST THEME (auth + select + set-password) ══ */
+.rf-auth-foot{margin-top:14px;text-align:center;}
+.rf-auth-link{color:var(--gold);text-decoration:none;font-size:0.82rem;font-weight:500;letter-spacing:0.03em;cursor:pointer;}
+.rf-auth-link:hover{text-decoration:underline;color:var(--gold-lt);}
+.rf-auth-success{margin-top:12px;text-align:center;font-size:0.84rem;color:#2d6a4f;min-height:1.1em;}
 /* Forest background is now applied unconditionally on body (see top of stylesheet).
    body.rf-bg remains as a color-scheme shim so the auth/select screens keep their
    dark cream text colour. */
@@ -773,6 +777,10 @@ body.rf-auth-state .progress-bar-wrap {
         <input type="password" id="si-pass" placeholder="Your password" data-action="clear-error">
       </div>
       <button class="rf-auth-btn" id="si-btn" data-action="sign-in">Sign In</button>
+      <div class="rf-auth-foot">
+        <a href="#" id="si-forgot" class="rf-auth-link">Forgot password?</a>
+      </div>
+      <div class="rf-auth-success" id="si-success"></div>
     </div>
   </div>
 </div>
@@ -3046,6 +3054,36 @@ async function adminViewAssessment(assessmentId, userId) {
 // ════════════════════════════════════════════════════════════════════════
 function clearAuthError() {
   document.getElementById('auth-error').textContent = '';
+  var ok = document.getElementById('si-success');
+  if (ok) ok.textContent = '';
+}
+
+// Click handler for the "Forgot password?" link. Sends a Supabase recovery
+// email to the address in the Email field. The redirectTo points at
+// /assessment so the user lands back here; the bootstrap then routes them
+// to the set-password screen via onAuthStateChange(PASSWORD_RECOVERY).
+async function doForgotPassword(ev) {
+  if (ev && ev.preventDefault) ev.preventDefault();
+  var emailEl = document.getElementById('si-email');
+  var email   = (emailEl.value || '').trim();
+  if (!email) {
+    showAuthError('Enter your email above first, then click Forgot password?.');
+    emailEl.focus();
+    return;
+  }
+  clearAuthError();
+  var ok = document.getElementById('si-success');
+  ok.textContent = 'Sending reset email…';
+  try {
+    var res = await sbClient().auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/assessment'
+    });
+    if (res.error) throw res.error;
+    ok.textContent = 'Check your inbox — a password reset link is on its way to ' + email + '.';
+  } catch (e) {
+    ok.textContent = '';
+    showAuthError((e && e.message) || 'Could not send reset email. Please try again.');
+  }
 }
 
 async function doSignIn() {
@@ -3171,19 +3209,33 @@ window.addEventListener('load', async function() {
   var overlay = document.getElementById('auth-loading');
   function hideOverlay() { if (overlay) overlay.style.display = 'none'; }
 
-  // Move onAuthStateChange inside load so Supabase library is definitely ready
+  // Detect URL callbacks early so we know whether to wait for an auth event.
+  var hash       = window.location.hash || '';
+  var url        = new URL(window.location.href);
+  var pkceCode   = url.searchParams.get('code');         // modern Supabase recovery / invite flow
+  var legacyHash = hash.indexOf('access_token') !== -1;  // older # fragment flow
+
+  // We may need to resolve when the SDK fires an auth event (PKCE) — set up a
+  // one-shot promise that the listener can resolve.
+  var resolveAuthEvent;
+  var authEventPromise = new Promise(function(r) { resolveAuthEvent = r; });
+
   sbClient().auth.onAuthStateChange(function(event, session) {
     if (event === 'PASSWORD_RECOVERY' && session) {
       _currentUser = session.user;
       history.replaceState(null, '', window.location.pathname);
       hideOverlay();
       showScreen('screen-set-password');
+      if (resolveAuthEvent) { resolveAuthEvent({ type: 'recovery' }); resolveAuthEvent = null; }
+    } else if (event === 'SIGNED_IN' && session && (pkceCode || legacyHash)) {
+      // Only resolve via this path if we're actively waiting on a URL callback.
+      if (resolveAuthEvent) { resolveAuthEvent({ type: 'signin', session: session }); resolveAuthEvent = null; }
     }
   });
 
   try {
-    var hash = window.location.hash || '';
-    if (hash.indexOf('access_token') !== -1) {
+    // Legacy hash flow — synchronous; SDK has already parsed the fragment.
+    if (legacyHash) {
       var tokenSession = await sbClient().auth.getSession();
       if (tokenSession.data && tokenSession.data.session) {
         _currentUser = tokenSession.data.session.user;
@@ -3198,6 +3250,31 @@ window.addEventListener('load', async function() {
         return;
       }
     }
+
+    // PKCE flow — the SDK exchanges ?code= asynchronously and fires an auth
+    // event. We MUST wait for it, otherwise restoreSession() races the
+    // exchange and we end up showing the sign-in screen on a fresh recovery
+    // landing.
+    if (pkceCode) {
+      var result = await Promise.race([
+        authEventPromise,
+        new Promise(function(r) { setTimeout(function() { r({ type: 'timeout' }); }, 6000); }),
+      ]);
+      if (result.type === 'recovery') {
+        // The listener already switched screens + hid overlay.
+        return;
+      }
+      if (result.type === 'signin') {
+        _currentUser = result.session.user;
+        history.replaceState(null, '', window.location.pathname);
+        await afterLogin();
+        hideOverlay();
+        return;
+      }
+      // Timeout — strip the code from the URL and fall through to sign-in.
+      history.replaceState(null, '', window.location.pathname);
+    }
+
     var hasSession = await restoreSession();
     if (hasSession) {
       await afterLogin();
@@ -3263,6 +3340,14 @@ function switchAuthMode(mode) {}
     if (siPass) {
       siPass.addEventListener('input', function() {
         clearAuthError();
+      });
+    }
+
+    // Forgot password link
+    var siForgot = document.getElementById('si-forgot');
+    if (siForgot) {
+      siForgot.addEventListener('click', function(e) {
+        doForgotPassword(e);
       });
     }
 
